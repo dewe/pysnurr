@@ -1,5 +1,7 @@
 # Snurr
 
+[![Tests](https://github.com/dewe/pysnurr/actions/workflows/tests.yml/badge.svg)](https://github.com/dewe/pysnurr/actions/workflows/tests.yml)
+
 A lightweight terminal spinner animation for Python applications. Provides non-blocking spinner animations at the current cursor position.
 
 ## Usage
