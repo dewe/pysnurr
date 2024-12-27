@@ -1,6 +1,6 @@
 from time import sleep
 
-from spinner import Snurr
+from pysnurr import Snurr
 
 
 def demo_basic():

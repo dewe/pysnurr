@@ -3,7 +3,7 @@ import time
 from contextlib import redirect_stdout
 from io import StringIO
 
-from spinner import Snurr
+from pysnurr import Snurr
 
 
 def test_init_default():
