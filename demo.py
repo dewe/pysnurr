@@ -40,23 +40,25 @@ def demo_with_output():
     """Demo spinner with concurrent stdout writes"""
     print("\n=== Spinner with Output ===")
 
-    # Normal output with spinner on new line
+    # Using synchronized write method
+    print("\nUsing synchronized write method:")
     spinner = Snurr(symbols=Snurr.EARTH)
     spinner.start()
-    print("Starting a long process...")
+    spinner.write("Starting a long process...")
     sleep(1)
-    print("Step 1: Data processing")
+    spinner.write("Step 1: Data processing")
+    sleep(1)
+    spinner.write("Step 2: Analysis complete")
     sleep(1)
     spinner.stop()
 
-    # Spinner at end of line
+    # Spinner at end of line with synchronized writes
     print("\nSpinner at end of line:")
-    spinner = Snurr(symbols=Snurr.CLASSIC, append=True)
+    spinner = Snurr(symbols=Snurr.HEARTS, append=True)
     spinner.start()
 
     for i in range(3):
-        print(f"\r{' ' * 40}", end="")
-        print(f"\rLine {i} printed after spinner started", end="", flush=True)
+        spinner.write(f"\rLine {i+1} while spinning", end="")
         sleep(1)
 
     spinner.stop()
@@ -78,10 +80,10 @@ if __name__ == "__main__":
     print("Press Ctrl+C to exit at any time")
 
     try:
-        # demo_basic()
-        # demo_styles()
+        demo_basic()
+        demo_styles()
         demo_with_output()
-        # demo_custom()
+        demo_custom()
 
         print("\nDemo completed! 🎉")
     except KeyboardInterrupt:

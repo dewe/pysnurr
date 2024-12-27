@@ -15,7 +15,8 @@ class Snurr:
     ARROWS = "←↖↑↗→↘↓↙"  # Arrow rotation
     DOTS_BOUNCE = ".oO°Oo."  # Bouncing dots
     TRIANGLES = "◢◣◤◥"  # Rotating triangles
-    HEARTS = "💛💙💜💚❤️"  # Colorful hearts
+    # HEARTS = "💛💙💜💚❤️"  # Colorful hearts
+    HEARTS = "💛💙💜💚"  # Colorful hearts
 
     def __init__(self, delay=0.1, symbols=CLASSIC, append=False):
         """
@@ -32,26 +33,54 @@ class Snurr:
         self.append = append
         self.spinner_thread = None
         self._screen_lock = threading.Lock()
+        self._current_symbol = None  # Track current symbol
         # ANSI escape codes for cursor visibility
         self.hide_cursor = "\033[?25l"
         self.show_cursor = "\033[?25h"
+
+    def _get_display_width(self, text):
+        """Calculate the display width of a string.
+
+        Args:
+            text (str): The text to calculate width for
+
+        Returns:
+            int: The display width of the text
+        """
+        return len(text.encode("utf-16-le")) // 2
+
+    def _erase_current(self, width):
+        """Erase the current spinner using three-step sequence.
+
+        Args:
+            width (int): The width of text to erase
+        """
+        if self.append:
+            width += 1  # Account for the space
+        sys.stdout.write("\b" * width)  # Move back
+        sys.stdout.write(" " * width)  # Clear
+        sys.stdout.write("\b" * width)  # Move back
 
     def _spin(self):
         """Internal method that handles the spinning animation."""
         spinner_cycle = itertools.cycle(self.symbols)
         while self.busy:
             with self._screen_lock:
-                current_symbol = next(spinner_cycle)
+                next_symbol = next(spinner_cycle)
+
+                # First erase the previous symbol if it exists
+                if self._current_symbol:
+                    width = self._get_display_width(self._current_symbol)
+                    self._erase_current(width)
+
+                # Write the new symbol
                 if self.append:
-                    sys.stdout.write(" " + current_symbol)
+                    sys.stdout.write(" " + next_symbol)
                 else:
-                    sys.stdout.write(current_symbol)
+                    sys.stdout.write(next_symbol)
                 sys.stdout.flush()
-                # Calculate backspace count for wide characters
-                backspace_count = len(current_symbol.encode("utf-16-le")) // 2
-                if self.append:
-                    backspace_count += 1  # Account for the space
-                sys.stdout.write("\b" * backspace_count)
+
+                self._current_symbol = next_symbol
             time.sleep(self.delay)
 
     def start(self):
@@ -69,11 +98,29 @@ class Snurr:
         if self.spinner_thread is not None:
             self.spinner_thread.join()
         with self._screen_lock:
-            # Calculate space count for wide characters
-            space_count = len(self.symbols[0].encode("utf-16-le")) // 2
-            if self.append:
-                space_count += 1  # Account for the space
-            sys.stdout.write(" " * space_count)
-            sys.stdout.write("\b" * space_count)
-            sys.stdout.write(self.show_cursor)  # Show cursor when stopping
+            # Use three-step erasing for the last symbol
+            if self._current_symbol:
+                width = self._get_display_width(self._current_symbol)
+                self._erase_current(width)
+            sys.stdout.write(self.show_cursor)  # Show cursor
+            sys.stdout.flush()
+            self._current_symbol = None
+
+    def write(self, text, end="\n"):
+        """Write text to stdout safely.
+
+        Thread-safe write that won't interfere with the spinner animation.
+
+        Args:
+            text (str): The text to write
+            end (str): String appended after the text, defaults to newline
+        """
+        with self._screen_lock:
+            # Clear current spinner using three-step erasing
+            if self._current_symbol:
+                width = self._get_display_width(self._current_symbol)
+                self._erase_current(width)
+
+            # Write the text
+            sys.stdout.write(str(text) + end)
             sys.stdout.flush()

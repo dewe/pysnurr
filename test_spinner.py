@@ -78,16 +78,17 @@ def test_spinner_output_wide_chars():
     assert "🌍" in captured
     assert "🌎" in captured
 
-    # Wide characters should have double backspaces
+    # Check for the pattern of our erasing sequence
     backspace_count = captured.count("\b")
-    earth_count = captured.count("🌍")
-    globe_count = captured.count("🌎")
-    assert backspace_count > 0
+    space_count = captured.count(" ")
 
-    # Each wide char gets 2 backspaces during animation
-    # Plus 2 more backspaces during cleanup in stop()
-    expected_backspaces = 2 * (earth_count + globe_count) + 2
-    assert backspace_count == expected_backspaces
+    # We should have backspaces for erasing and spaces for clearing
+    assert backspace_count > 0
+    assert space_count > 0
+
+    # The ratio of backspaces to spaces should be about 2:1
+    # (we use \b twice for each space: once before, once after)
+    assert abs(backspace_count - (space_count * 2)) <= 2
 
 
 def test_cursor_visibility():
