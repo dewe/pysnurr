@@ -10,16 +10,16 @@ def test_init_default():
     """Test default initialization of Snurr"""
     spinner = Snurr()
     assert spinner.delay == 0.1
-    assert spinner.symbols == Snurr.DOTS
+    assert spinner.symbols == Snurr.CLASSIC
     assert not spinner.busy
     assert spinner.spinner_thread is None
 
 
 def test_init_custom():
     """Test custom initialization of Snurr"""
-    spinner = Snurr(delay=0.2, symbols=Snurr.CLASSIC)
+    spinner = Snurr(delay=0.2, symbols=Snurr.DOTS)
     assert spinner.delay == 0.2
-    assert spinner.symbols == Snurr.CLASSIC
+    assert spinner.symbols == Snurr.DOTS
     assert not spinner.busy
     assert spinner.spinner_thread is None
 

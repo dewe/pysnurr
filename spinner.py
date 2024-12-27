@@ -17,7 +17,7 @@ class Snurr:
     TRIANGLES = "◢◣◤◥"  # Rotating triangles
     HEARTS = "💛💙💜💚❤️"  # Colorful hearts
 
-    def __init__(self, delay=0.1, symbols=DOTS):
+    def __init__(self, delay=0.1, symbols=CLASSIC):
         """
         Initialize the spinner.
 

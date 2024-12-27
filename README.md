@@ -10,16 +10,16 @@ A lightweight terminal spinner animation for Python applications. Provides non-b
 from snurr import Snurr
 import time
 
-# Basic usage with default spinner
+# Basic usage with default spinner (/-\|)
 spinner = Snurr()
 spinner.start()
 time.sleep(2)  # Do some work
 spinner.stop()
 
 # Choose from various spinner styles
+spinner = Snurr(symbols=Snurr.DOTS)     # ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏
 spinner = Snurr(symbols=Snurr.EARTH)    # 🌍🌎🌏
 spinner = Snurr(symbols=Snurr.CLOCK)    # 🕐🕑🕒...
-spinner = Snurr(symbols=Snurr.CLASSIC)  # /-\|
 spinner = Snurr(symbols=Snurr.HEARTS)   # 💛💙💜💚❤️
 ```
 

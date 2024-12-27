@@ -16,8 +16,8 @@ def demo_styles():
     """Demo all available spinner styles"""
     print("\n=== Spinner Styles ===")
     styles = {
-        "DOTS (default)": Snurr.DOTS,
-        "CLASSIC": Snurr.CLASSIC,
+        "CLASSIC (default)": Snurr.CLASSIC,
+        "DOTS": Snurr.DOTS,
         "BAR": Snurr.BAR,
         "EARTH": Snurr.EARTH,
         "MOON": Snurr.MOON,
