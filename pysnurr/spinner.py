@@ -69,8 +69,28 @@ class Snurr:
         Args:
             delay (float): Time between spinner updates in seconds
             symbols (str): String containing spinner animation frames
+                         (max 100 chars)
             append (bool): If True, adds space and shows spinner at line end
+
+        Raises:
+            ValueError: If delay is negative or symbols is empty/too long
+            TypeError: If symbols is not a string or delay is not a number
         """
+        if not isinstance(delay, (int, float)):
+            raise TypeError("delay must be a number")
+        if delay < 0:
+            raise ValueError("delay must be non-negative")
+
+        if not isinstance(symbols, str):
+            raise TypeError("symbols must be a string")
+        if not symbols:
+            raise ValueError("symbols cannot be empty")
+        if len(symbols) > 100:  # Reasonable limit for animation frames
+            raise ValueError("symbols string too long (max 100 characters)")
+
+        if not isinstance(append, bool):
+            raise TypeError("append must be a boolean")
+
         self.symbols = symbols
         self.delay = delay
         self.append = append
@@ -129,7 +149,15 @@ class Snurr:
         Args:
             text (str): The text to write
             end (str): String appended after the text, defaults to newline
+
+        Raises:
+            TypeError: If text or end is not a string
         """
+        if not isinstance(text, (str, bytes)):
+            raise TypeError("text must be a string or bytes")
+        if not isinstance(end, str):
+            raise TypeError("end must be a string")
+
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
