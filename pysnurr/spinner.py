@@ -75,7 +75,7 @@ class Snurr:
         self.delay = delay
         self.append = append
         self.busy = False
-        self.spinner_thread = None
+        self._spinner_thread = None
         self._current_symbol = None
         self._terminal = TerminalWriter()
 
@@ -106,15 +106,15 @@ class Snurr:
         """Start the spinner animation in a non-blocking way."""
         self.busy = True
         self._terminal.hide_cursor()
-        self.spinner_thread = threading.Thread(target=self._spin)
-        self.spinner_thread.daemon = True
-        self.spinner_thread.start()
+        self._spinner_thread = threading.Thread(target=self._spin)
+        self._spinner_thread.daemon = True
+        self._spinner_thread.start()
 
     def stop(self):
         """Stop the spinner animation."""
         self.busy = False
-        if self.spinner_thread:
-            self.spinner_thread.join()
+        if self._spinner_thread:
+            self._spinner_thread.join()
             if self._current_symbol:
                 width = self._get_symbol_width(self._current_symbol)
                 self._terminal.erase(width)

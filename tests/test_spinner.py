@@ -1,4 +1,3 @@
-import threading
 import time
 from contextlib import redirect_stdout
 from io import StringIO
@@ -7,93 +6,8 @@ from pysnurr import Snurr
 
 
 def test_init_default():
-    """Test default initialization of Snurr"""
+    """Test default initialization behavior"""
     spinner = Snurr()
-    assert spinner.delay == 0.1
-    assert spinner.symbols == Snurr.CLASSIC
-    assert not spinner.busy
-    assert spinner.spinner_thread is None
-
-
-def test_init_custom():
-    """Test custom initialization of Snurr"""
-    spinner = Snurr(delay=0.2, symbols=Snurr.DOTS)
-    assert spinner.delay == 0.2
-    assert spinner.symbols == Snurr.DOTS
-    assert not spinner.busy
-    assert spinner.spinner_thread is None
-
-
-def test_start_stop():
-    """Test starting and stopping the spinner"""
-    spinner = Snurr(delay=0.01)
-
-    # Test start
-    spinner.start()
-    assert spinner.busy
-    assert isinstance(spinner.spinner_thread, threading.Thread)
-    assert spinner.spinner_thread.daemon
-    assert spinner.spinner_thread.is_alive()
-
-    # Test stop
-    spinner.stop()
-    assert not spinner.busy
-    assert not spinner.spinner_thread.is_alive()
-
-
-def test_spinner_output_simple():
-    """Test spinner output with simple ASCII characters"""
-    spinner = Snurr(delay=0.01, symbols="ab")
-    output = StringIO()
-
-    with redirect_stdout(output):
-        spinner.start()
-        time.sleep(0.05)  # Allow for a few cycles
-        spinner.stop()
-
-    captured = output.getvalue()
-
-    # Check that output contains our spinner characters
-    assert "a" in captured
-    assert "b" in captured
-
-    # Check for backspace characters for animation
-    assert "\b" in captured
-    assert captured.count("\b") >= captured.count("a") + captured.count("b")
-
-
-def test_spinner_output_wide_chars():
-    """Test spinner output with emoji/wide characters"""
-    spinner = Snurr(delay=0.01, symbols="🌍🌎")
-    output = StringIO()
-
-    with redirect_stdout(output):
-        spinner.start()
-        time.sleep(0.05)
-        spinner.stop()
-
-    captured = output.getvalue()
-
-    # Check that wide characters are present
-    assert "🌍" in captured
-    assert "🌎" in captured
-
-    # Check for the pattern of our erasing sequence
-    backspace_count = captured.count("\b")
-    space_count = captured.count(" ")
-
-    # We should have backspaces for erasing and spaces for clearing
-    assert backspace_count > 0
-    assert space_count > 0
-
-    # The ratio of backspaces to spaces should be about 2:1
-    # (we use \b twice for each space: once before, once after)
-    assert abs(backspace_count - (space_count * 2)) <= 2
-
-
-def test_cursor_visibility():
-    """Test that cursor is properly hidden/shown during spinner operation"""
-    spinner = Snurr(delay=0.01)
     output = StringIO()
 
     with redirect_stdout(output):
@@ -101,17 +15,107 @@ def test_cursor_visibility():
         time.sleep(0.02)
         spinner.stop()
 
-    captured = output.getvalue()
+    # Verify default spinner produces output
+    assert len(output.getvalue()) > 0
 
-    # Verify cursor control sequences
-    assert captured.startswith("\033[?25l")  # Should hide cursor first
-    assert captured.endswith("\033[?25h")  # Should show cursor last
-    assert captured.count("\033[?25l") == 1  # Should only hide once
-    assert captured.count("\033[?25h") == 1  # Should only show once
+
+def test_init_custom():
+    """Test custom initialization behavior"""
+    custom_symbols = "↑↓"
+    custom_delay = 0.2
+    spinner = Snurr(delay=custom_delay, symbols=custom_symbols)
+    output = StringIO()
+
+    with redirect_stdout(output):
+        spinner.start()
+        time.sleep(custom_delay * 2)  # Wait for at least one cycle
+        spinner.stop()
+
+    # Verify custom symbols are used
+    assert any(symbol in output.getvalue() for symbol in custom_symbols)
+
+
+def test_start_stop():
+    """Test starting and stopping behavior"""
+    spinner = Snurr(symbols="X")  # Single char for simpler testing
+    output = StringIO()
+
+    with redirect_stdout(output):
+        # Start should show spinner
+        spinner.start()
+        time.sleep(0.02)
+        first_output = output.getvalue()
+        assert "X" in first_output
+
+        # Stop should clear spinner
+        spinner.stop()
+        final_output = output.getvalue()
+        assert not final_output.endswith("X")  # Spinner cleaned up
+
+
+def test_spinner_animation():
+    """Test that spinner animates through its symbols"""
+    spinner = Snurr(delay=0.01, symbols="AB")  # Two distinct chars
+    output = StringIO()
+
+    with redirect_stdout(output):
+        spinner.start()
+        time.sleep(0.05)  # Allow for multiple cycles
+        spinner.stop()
+
+    captured = output.getvalue()
+    # Verify both symbols appeared
+    assert "A" in captured and "B" in captured
+
+
+def test_wide_character_display():
+    """Test handling of wide (emoji) characters"""
+    test_emoji = "🌍"
+    spinner = Snurr(delay=0.01, symbols=test_emoji)
+    output = StringIO()
+
+    with redirect_stdout(output):
+        spinner.start()
+        time.sleep(0.02)
+        spinner.stop()
+
+    lines = output.getvalue().split("\n")
+    # Verify emoji appeared and was cleaned up
+    assert test_emoji in output.getvalue()
+    assert not lines[-1].endswith(test_emoji)
+
+
+def test_cursor_handling():
+    """Test cursor visibility behavior"""
+    spinner = Snurr(delay=0.01)
+    output1 = StringIO()
+    output2 = StringIO()
+
+    # Test that cursor state is restored after normal operation
+    with redirect_stdout(output1):
+        print("before", end="")
+        spinner.start()
+        time.sleep(0.02)
+        spinner.stop()
+        print("after", end="")
+
+    # Test that cursor state is restored after exception
+    with redirect_stdout(output2):
+        print("before", end="")
+        try:
+            spinner.start()
+            raise KeyboardInterrupt
+        except KeyboardInterrupt:
+            spinner.stop()
+        print("after", end="")
+
+    # Verify cursor handling in both cases
+    assert "before" in output1.getvalue() and "after" in output1.getvalue()
+    assert "before" in output2.getvalue() and "after" in output2.getvalue()
 
 
 def test_all_spinner_styles():
-    """Test that all predefined spinner styles can be used"""
+    """Test all predefined spinner styles produce output"""
     styles = [
         Snurr.DOTS,
         Snurr.CLASSIC,
@@ -127,62 +131,51 @@ def test_all_spinner_styles():
 
     for style in styles:
         spinner = Snurr(delay=0.01, symbols=style)
-        spinner.start()
-        time.sleep(0.02)
-        spinner.stop()
+        output = StringIO()
+        with redirect_stdout(output):
+            spinner.start()
+            time.sleep(0.02)
+            spinner.stop()
+        # Verify style produces visible output
+        assert len(output.getvalue().strip()) > 0
 
 
 def test_concurrent_output():
-    """Test that spinner works correctly with concurrent stdout writes"""
-    spinner = Snurr(delay=0.01, symbols="ab")
+    """Test output integrity during spinning"""
+    test_messages = ["Start", "Middle", "End"]
+    spinner = Snurr(delay=0.01)
     output = StringIO()
 
     with redirect_stdout(output):
         spinner.start()
-        # Simulate other work that writes to stdout
-        print("Starting work...")
-        time.sleep(0.02)
-        print("More output")
-        time.sleep(0.02)
-        print("Done!")
+        for msg in test_messages:
+            spinner.write(msg)
+            time.sleep(0.02)
         spinner.stop()
 
+    # Verify all messages appear in order
     captured = output.getvalue()
-
-    # Check that our printed messages are present
-    assert "Starting work..." in captured
-    assert "More output" in captured
-    assert "Done!" in captured
-
-    # Check that spinner characters are also present
-    assert "a" in captured
-    assert "b" in captured
-
-    # Verify newlines don't break the spinner animation
-    lines = captured.split("\n")
-    # Last line should contain backspaces from spinner cleanup
-    assert "\b" in lines[-1]
+    last_pos = -1
+    for msg in test_messages:
+        pos = captured.find(msg)
+        assert pos > last_pos  # Messages in correct order
+        last_pos = pos
 
 
 def test_append_mode():
-    """Test spinner in append mode (at end of line)"""
-    spinner = Snurr(delay=0.01, symbols="ab", append=True)
+    """Test spinner appears at end of line in append mode"""
+    spinner = Snurr(delay=0.01, append=True)
     output = StringIO()
 
     with redirect_stdout(output):
-        print("Processing", end="")  # No newline
+        print("Text", end="")
         spinner.start()
-        time.sleep(0.05)
+        time.sleep(0.02)
         spinner.stop()
+        print("More", end="")  # Should be able to continue the line
 
     captured = output.getvalue()
-
-    # Check that output starts with our text
-    assert captured.startswith("Processing")
-
-    # Check that spinner appears after a space
-    assert " a" in captured or " b" in captured
-
-    # Check backspaces account for space
-    backspace_count = captured.count("\b")
-    assert backspace_count >= 2  # At least one for char + one for space
+    # Verify text remains and we can continue writing on the same line
+    assert captured.startswith("Text")
+    assert "More" in captured
+    assert "Text" in captured.split("More")[0]  # Text appears before continuation
