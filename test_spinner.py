@@ -161,3 +161,27 @@ def test_concurrent_output():
     lines = captured.split("\n")
     # Last line should contain backspaces from spinner cleanup
     assert "\b" in lines[-1]
+
+
+def test_append_mode():
+    """Test spinner in append mode (at end of line)"""
+    spinner = Snurr(delay=0.01, symbols="ab", append=True)
+    output = StringIO()
+
+    with redirect_stdout(output):
+        print("Processing", end="")  # No newline
+        spinner.start()
+        time.sleep(0.05)
+        spinner.stop()
+
+    captured = output.getvalue()
+
+    # Check that output starts with our text
+    assert captured.startswith("Processing")
+
+    # Check that spinner appears after a space
+    assert " a" in captured or " b" in captured
+
+    # Check backspaces account for space
+    backspace_count = captured.count("\b")
+    assert backspace_count >= 2  # At least one for char + one for space

@@ -21,6 +21,14 @@ spinner = Snurr(symbols=Snurr.DOTS)     # ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏
 spinner = Snurr(symbols=Snurr.EARTH)    # 🌍🌎🌏
 spinner = Snurr(symbols=Snurr.CLOCK)    # 🕐🕑🕒...
 spinner = Snurr(symbols=Snurr.HEARTS)   # 💛💙💜💚❤️
+
+# Show spinner at end of line
+print("Processing", end="")
+spinner = Snurr(append=True)  # Adds space before spinner
+spinner.start()
+time.sleep(2)
+spinner.stop()
+print(" Done!")
 ```
 
 ## Features
@@ -30,3 +38,4 @@ spinner = Snurr(symbols=Snurr.HEARTS)   # 💛💙💜💚❤️
 - Cursor hiding during animation
 - Thread-safe output
 - No dependencies
+- Flexible positioning (new line or end of text)

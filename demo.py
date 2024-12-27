@@ -39,27 +39,35 @@ def demo_styles():
 def demo_with_output():
     """Demo spinner with concurrent stdout writes"""
     print("\n=== Spinner with Output ===")
+
+    # Normal output with spinner on new line
     spinner = Snurr(symbols=Snurr.EARTH)
     spinner.start()
-
     print("Starting a long process...")
     sleep(1)
     print("Step 1: Data processing")
     sleep(1)
-    print("Step 2: Analysis")
-    sleep(1)
-    print("Step 3: Generating report")
-    sleep(1)
-    print("Done!")
+    spinner.stop()
+
+    # Spinner at end of line
+    print("\nSpinner at end of line:")
+    spinner = Snurr(symbols=Snurr.CLASSIC, append=True)
+    spinner.start()
+
+    for i in range(3):
+        print(f"\r{' ' * 40}", end="")
+        print(f"\rLine {i} printed after spinner started", end="", flush=True)
+        sleep(1)
 
     spinner.stop()
+    print("\nDone!")
 
 
 def demo_custom():
     """Demo custom spinner configuration"""
     print("\n=== Custom Spinner ===")
     print("Custom symbols and slower speed:")
-    spinner = Snurr(symbols="▰▱", delay=0.5)
+    spinner = Snurr(symbols="◉◎", delay=0.5)
     spinner.start()
     sleep(2)
     spinner.stop()
@@ -70,10 +78,10 @@ if __name__ == "__main__":
     print("Press Ctrl+C to exit at any time")
 
     try:
-        demo_basic()
-        demo_styles()
+        # demo_basic()
+        # demo_styles()
         demo_with_output()
-        demo_custom()
+        # demo_custom()
 
         print("\nDemo completed! 🎉")
     except KeyboardInterrupt:

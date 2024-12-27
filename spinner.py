@@ -17,17 +17,19 @@ class Snurr:
     TRIANGLES = "◢◣◤◥"  # Rotating triangles
     HEARTS = "💛💙💜💚❤️"  # Colorful hearts
 
-    def __init__(self, delay=0.1, symbols=CLASSIC):
+    def __init__(self, delay=0.1, symbols=CLASSIC, append=False):
         """
         Initialize the spinner.
 
         Args:
             delay (float): Time between spinner updates in seconds
             symbols (str): String containing spinner animation frames
+            append (bool): If True, adds space and shows spinner at line end
         """
         self.symbols = symbols
         self.delay = delay
         self.busy = False
+        self.append = append
         self.spinner_thread = None
         self._screen_lock = threading.Lock()
         # ANSI escape codes for cursor visibility
@@ -40,10 +42,15 @@ class Snurr:
         while self.busy:
             with self._screen_lock:
                 current_symbol = next(spinner_cycle)
-                sys.stdout.write(current_symbol)
+                if self.append:
+                    sys.stdout.write(" " + current_symbol)
+                else:
+                    sys.stdout.write(current_symbol)
                 sys.stdout.flush()
                 # Calculate backspace count for wide characters
                 backspace_count = len(current_symbol.encode("utf-16-le")) // 2
+                if self.append:
+                    backspace_count += 1  # Account for the space
                 sys.stdout.write("\b" * backspace_count)
             time.sleep(self.delay)
 
@@ -64,6 +71,8 @@ class Snurr:
         with self._screen_lock:
             # Calculate space count for wide characters
             space_count = len(self.symbols[0].encode("utf-16-le")) // 2
+            if self.append:
+                space_count += 1  # Account for the space
             sys.stdout.write(" " * space_count)
             sys.stdout.write("\b" * space_count)
             sys.stdout.write(self.show_cursor)  # Show cursor when stopping
