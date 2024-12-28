@@ -219,3 +219,42 @@ def test_invalid_write():
 
     with pytest.raises(TypeError, match="end must be a string"):
         spinner.write("text", end=123)
+
+
+def test_write_during_spinning():
+    """Test that write works correctly while spinner is running"""
+    spinner = Snurr(delay=0.01, append=True)
+    output = StringIO()
+
+    with redirect_stdout(output):
+        spinner.start()
+        time.sleep(0.02)  # Let spinner run a bit
+        spinner.write("Hello", end="")
+        time.sleep(0.02)
+        spinner.write("There", end="")
+        time.sleep(0.02)  # Let spinner continue after write
+        spinner.stop()
+
+    captured = output.getvalue()
+    cleaned = clean_backspaces_and_cursor_sequences(captured)
+    assert "HelloThere" in cleaned
+    # Verify spinner appears after the text
+    # hello_pos = captured.find("HelloThere")
+    # spinner_output = captured[hello_pos + 5 :]  # After "Hello"
+    # assert len(spinner_output.strip()) > 0  # Spinner continued after text
+
+
+def clean_backspaces_and_cursor_sequences(captured):
+    cleaned = ""
+    i = 0
+    while i < len(captured):
+        if captured[i] == "\b":
+            if cleaned:  # Only remove last char if there is one
+                cleaned = cleaned[:-1]
+            i += 1
+        else:
+            cleaned += captured[i]
+            i += 1
+    cleaned = cleaned.replace("\033[?25l", "")  # Hide cursor
+    cleaned = cleaned.replace("\033[?25h", "")  # Show cursor
+    return cleaned

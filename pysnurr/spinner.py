@@ -171,7 +171,13 @@ class Snurr:
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
+
         self._terminal.write(str(text) + end)
+
+        # Reset spinner position if writing without newline
+        if not end.endswith("\n"):
+            # Force redraw of spinner at new position
+            self._current_symbol = None
 
     def __enter__(self) -> "Snurr":
         """Enter the context manager, starting the spinner.
