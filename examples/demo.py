@@ -69,7 +69,7 @@ def demo_custom() -> None:
     print("\n=== Custom Spinner ===")
     print("Custom symbols and slower speed:")
     with Snurr(symbols="◉◎", delay=0.5):
-        sleep(2)
+        sleep(4)
 
 
 if __name__ == "__main__":
