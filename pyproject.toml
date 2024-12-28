@@ -7,7 +7,7 @@ name = "pysnurr"
 dynamic = ["version"]
 description = "A beautiful terminal spinner library for Python"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "dewe" },
@@ -20,9 +20,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -65,7 +62,7 @@ strict_equality = true
 path = "pysnurr/__init__.py" 
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py310"
 line-length = 88  # Same as Black
 
 [tool.ruff.lint]
@@ -89,5 +86,5 @@ known-first-party = ["pysnurr"]
 
 [tool.black]
 line-length = 88
-target-version = ["py37"]
+target-version = ["py310"]
 include = '\.pyi?$' 
