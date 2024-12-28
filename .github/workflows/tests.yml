@@ -29,6 +29,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install ".[test]"
 
+      - name: Run type checks
+        run: |
+          python -m mypy pysnurr
+
       - name: Run tests
         run: |
           python -m pytest -v --color=yes
