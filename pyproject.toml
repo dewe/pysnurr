@@ -36,4 +36,9 @@ Repository = "https://github.com/dewe/pysnurr"
 Issues = "https://github.com/dewe/pysnurr/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["pysnurr"] 
+packages = ["pysnurr"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+] 
