@@ -15,8 +15,8 @@ build: clean
 	python -m build
 
 publish: build
-	@if [ "$$(grep '__version__ = ' pysnurr/__init__.py | cut -d'"' -f2)" != "$$(^grep 'version = ' pyproject.toml | cut -d'"' -f2)" ]; then \
-		echo "Error: Version mismatch between pyproject.toml and __init__.py"; \
+	@if [ "$$(grep '__version__ = ' pysnurr/__init__.py | cut -d'"' -f2)" != "$$(grep '^version = ' pyproject.toml | cut -d'"' -f2)" ]; then \
+		echo "Error: Version mismatch between pyproject.toml and pysnurr/__init__.py"; \
 		exit 1; \
 	fi
 	python -m twine upload dist/*
