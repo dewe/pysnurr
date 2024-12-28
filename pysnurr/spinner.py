@@ -2,22 +2,28 @@ import itertools
 import sys
 import threading
 import time
-from typing import Optional, Union
+from typing import Optional, TypeAlias, Union
+
+# Type aliases for improved readability and maintainability
+SpinnerSymbols: TypeAlias = str  # String containing spinner animation frames
+Delay: TypeAlias = float  # Time between spinner updates in seconds
+# Content that can be written to terminal (str or bytes)
+TextContent: TypeAlias = Union[str, bytes]
 
 
 class SpinnerStyles:
     """Collection of spinner animation styles."""
 
-    DOTS: str = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Default braille dots
-    CLASSIC: str = "/-\\|"  # Classic ASCII spinner
-    BAR: str = "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁"  # ASCII loading bar
-    EARTH: str = "🌍🌎🌏"  # Earth rotation
-    MOON: str = "🌑🌒🌓🌔🌕🌖🌗🌘"  # Moon phases
-    CLOCK: str = "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛"  # Clock rotation
-    ARROWS: str = "←↖↑↗→↘↓↙"  # Arrow rotation
-    DOTS_BOUNCE: str = ".oO°Oo."  # Bouncing dots
-    TRIANGLES: str = "◢◣◤◥"  # Rotating triangles
-    HEARTS: str = "💛💙💜💚"  # Colorful hearts
+    DOTS: SpinnerSymbols = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Default braille dots
+    CLASSIC: SpinnerSymbols = "/-\\|"  # Classic ASCII spinner
+    BAR: SpinnerSymbols = "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁"  # ASCII loading bar
+    EARTH: SpinnerSymbols = "🌍🌎🌏"  # Earth rotation
+    MOON: SpinnerSymbols = "🌑🌒🌓🌔🌕🌖🌗🌘"  # Moon phases
+    CLOCK: SpinnerSymbols = "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛"  # Clock rotation
+    ARROWS: SpinnerSymbols = "←↖↑↗→↘↓↙"  # Arrow rotation
+    DOTS_BOUNCE: SpinnerSymbols = ".oO°Oo."  # Bouncing dots
+    TRIANGLES: SpinnerSymbols = "◢◣◤◥"  # Rotating triangles
+    HEARTS: SpinnerSymbols = "💛💙💜💚"  # Colorful hearts
 
 
 class TerminalWriter:
@@ -29,10 +35,10 @@ class TerminalWriter:
     def __init__(self) -> None:
         self._screen_lock: threading.Lock = threading.Lock()
 
-    def write(self, text: str) -> None:
+    def write(self, text: TextContent) -> None:
         """Write text to terminal with thread safety."""
         with self._screen_lock:
-            sys.stdout.write(text)
+            sys.stdout.write(str(text))
             sys.stdout.flush()
 
     def erase(self, width: int) -> None:
@@ -51,31 +57,32 @@ class TerminalWriter:
 class Snurr:
     """A non-blocking terminal spinner animation."""
 
-    # Make spinner styles available as class attributes for backward compatibility
-    DOTS: str = SpinnerStyles.DOTS
-    CLASSIC: str = SpinnerStyles.CLASSIC
-    BAR: str = SpinnerStyles.BAR
-    EARTH: str = SpinnerStyles.EARTH
-    MOON: str = SpinnerStyles.MOON
-    CLOCK: str = SpinnerStyles.CLOCK
-    ARROWS: str = SpinnerStyles.ARROWS
-    DOTS_BOUNCE: str = SpinnerStyles.DOTS_BOUNCE
-    TRIANGLES: str = SpinnerStyles.TRIANGLES
-    HEARTS: str = SpinnerStyles.HEARTS
+    # Make spinner styles available as class attributes for backward
+    # compatibility
+    DOTS: SpinnerSymbols = SpinnerStyles.DOTS
+    CLASSIC: SpinnerSymbols = SpinnerStyles.CLASSIC
+    BAR: SpinnerSymbols = SpinnerStyles.BAR
+    EARTH: SpinnerSymbols = SpinnerStyles.EARTH
+    MOON: SpinnerSymbols = SpinnerStyles.MOON
+    CLOCK: SpinnerSymbols = SpinnerStyles.CLOCK
+    ARROWS: SpinnerSymbols = SpinnerStyles.ARROWS
+    DOTS_BOUNCE: SpinnerSymbols = SpinnerStyles.DOTS_BOUNCE
+    TRIANGLES: SpinnerSymbols = SpinnerStyles.TRIANGLES
+    HEARTS: SpinnerSymbols = SpinnerStyles.HEARTS
 
     def __init__(
         self,
-        delay: float = 0.1,
-        symbols: str = SpinnerStyles.CLASSIC,
+        delay: Delay = 0.1,
+        symbols: SpinnerSymbols = SpinnerStyles.CLASSIC,
         append: bool = False,
     ) -> None:
         """Initialize the spinner.
 
         Args:
-            delay (float): Time between spinner updates in seconds
-            symbols (str): String containing spinner animation frames
-                         (max 100 chars)
-            append (bool): If True, adds space and shows spinner at line end
+            delay: Time between spinner updates in seconds
+            symbols: String containing spinner animation frames
+                    (max 100 chars)
+            append: If True, adds space and shows spinner at line end
 
         Raises:
             ValueError: If delay is negative or symbols is empty/too long
@@ -96,15 +103,15 @@ class Snurr:
         if not isinstance(append, bool):
             raise TypeError("append must be a boolean")
 
-        self.symbols: str = symbols
-        self.delay: float = delay
+        self.symbols: SpinnerSymbols = symbols
+        self.delay: Delay = delay
         self.append: bool = append
         self.busy: bool = False
         self._spinner_thread: Optional[threading.Thread] = None
-        self._current_symbol: Optional[str] = None
+        self._current_symbol: Optional[SpinnerSymbols] = None
         self._terminal: TerminalWriter = TerminalWriter()
 
-    def _get_symbol_width(self, symbol: str) -> int:
+    def _get_symbol_width(self, symbol: SpinnerSymbols) -> int:
         """Calculate display width of a symbol."""
         width = len(symbol.encode("utf-16-le")) // 2
         return width + 1 if self.append else width
@@ -117,7 +124,7 @@ class Snurr:
             self._update_symbol(symbol)
             time.sleep(self.delay)
 
-    def _update_symbol(self, new_symbol: str) -> None:
+    def _update_symbol(self, new_symbol: SpinnerSymbols) -> None:
         """Update the displayed spinner symbol."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
@@ -146,14 +153,14 @@ class Snurr:
             self._terminal.show_cursor()
             self._current_symbol = None
 
-    def write(self, text: Union[str, bytes], end: str = "\n") -> None:
+    def write(self, text: TextContent, end: str = "\n") -> None:
         """Write text to stdout safely.
 
         Thread-safe write that won't interfere with the spinner animation.
 
         Args:
-            text (str): The text to write
-            end (str): String appended after the text, defaults to newline
+            text: The text to write
+            end: String appended after the text, defaults to newline
 
         Raises:
             TypeError: If text or end is not a string
