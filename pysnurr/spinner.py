@@ -4,10 +4,8 @@ import threading
 import time
 from typing import Optional, TypeAlias, Union
 
-# Type aliases for improved readability and maintainability
-SpinnerSymbols: TypeAlias = str  # String containing spinner animation frames
-Delay: TypeAlias = float  # Time between spinner updates in seconds
-# Content that can be written to terminal (str or bytes)
+SpinnerSymbols: TypeAlias = str
+Delay: TypeAlias = float
 TextContent: TypeAlias = Union[str, bytes]
 
 
