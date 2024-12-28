@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pysnurr"
-version = "0.1.1"
+dynamic = ["version"]
 description = "A beautiful terminal spinner library for Python"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -45,7 +45,7 @@ test = [
 ] 
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -58,3 +58,6 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true 
+
+[tool.hatch.version]
+path = "pysnurr/__init__.py" 
