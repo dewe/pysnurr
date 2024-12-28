@@ -3,16 +3,22 @@ from time import sleep
 from pysnurr import Snurr
 
 
-def demo_basic():
+def demo_basic() -> None:
     """Demo basic spinner usage"""
     print("\n=== Basic Usage ===")
+
+    print("\nContext manager (recommended):")
+    with Snurr():
+        sleep(2)  # Simulate work
+
+    print("\nTraditional usage:")
     spinner = Snurr()
     spinner.start()
     sleep(2)  # Simulate work
     spinner.stop()
 
 
-def demo_styles():
+def demo_styles() -> None:
     """Demo all available spinner styles"""
     print("\n=== Spinner Styles ===")
     styles = {
@@ -30,49 +36,40 @@ def demo_styles():
 
     for name, style in styles.items():
         print(f"\nStyle: {name}")
-        spinner = Snurr(symbols=style)
-        spinner.start()
-        sleep(2)
-        spinner.stop()
+        with Snurr(symbols=style):
+            sleep(2)
 
 
-def demo_with_output():
+def demo_with_output() -> None:
     """Demo spinner with concurrent stdout writes"""
     print("\n=== Spinner with Output ===")
 
     # Using synchronized write method
     print("\nUsing synchronized write method:")
-    spinner = Snurr(symbols=Snurr.EARTH)
-    spinner.start()
-    spinner.write("Starting a long process...")
-    sleep(1)
-    spinner.write("Step 1: Data processing")
-    sleep(1)
-    spinner.write("Step 2: Analysis complete")
-    sleep(1)
-    spinner.stop()
+    with Snurr(symbols=Snurr.EARTH) as spinner:
+        spinner.write("Starting a long process...")
+        sleep(1)
+        spinner.write("Step 1: Data processing")
+        sleep(1)
+        spinner.write("Step 2: Analysis complete")
+        sleep(1)
 
     # Spinner at end of line with synchronized writes
     print("\nSpinner at end of line:")
-    spinner = Snurr(symbols=Snurr.HEARTS, append=True)
-    spinner.start()
+    with Snurr(symbols=Snurr.HEARTS, append=True) as spinner:
+        for i in range(3):
+            spinner.write(f"\rLine {i+1} while spinning", end="")
+            sleep(1)
 
-    for i in range(3):
-        spinner.write(f"\rLine {i+1} while spinning", end="")
-        sleep(1)
-
-    spinner.stop()
     print("\nDone!")
 
 
-def demo_custom():
+def demo_custom() -> None:
     """Demo custom spinner configuration"""
     print("\n=== Custom Spinner ===")
     print("Custom symbols and slower speed:")
-    spinner = Snurr(symbols="◉◎", delay=0.5)
-    spinner.start()
-    sleep(2)
-    spinner.stop()
+    with Snurr(symbols="◉◎", delay=0.5):
+        sleep(2)
 
 
 if __name__ == "__main__":

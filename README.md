@@ -16,7 +16,11 @@ pip install pysnurr
 from pysnurr import Snurr
 import time
 
-# Basic usage with default spinner (/-\|)
+# Basic usage with context manager (recommended)
+with Snurr() as spinner:
+    time.sleep(2)  # Do some work
+
+# Traditional usage
 spinner = Snurr()
 spinner.start()
 time.sleep(2)  # Do some work
@@ -30,21 +34,17 @@ spinner = Snurr(symbols=Snurr.HEARTS)   # 💛💙💜💚
 
 # Show spinner at end of line
 print("Processing", end="")
-spinner = Snurr(append=True)  # Adds space before spinner
-spinner.start()
-time.sleep(2)
-spinner.stop()
+with Snurr(append=True) as spinner:  # Adds space before spinner
+    time.sleep(2)
 print(" Done!")
 
 # Thread-safe output during spinning
-spinner = Snurr(symbols=Snurr.EARTH)
-spinner.start()
-spinner.write("Starting a long process...")
-time.sleep(1)
-spinner.write("Step 1: Data processing")
-time.sleep(1)
-spinner.write("Step 2: Analysis complete")
-spinner.stop()
+with Snurr(symbols=Snurr.EARTH) as spinner:
+    spinner.write("Starting a long process...")
+    time.sleep(1)
+    spinner.write("Step 1: Data processing")
+    time.sleep(1)
+    spinner.write("Step 2: Analysis complete")
 ```
 
 ## Features

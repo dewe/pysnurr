@@ -167,3 +167,27 @@ class Snurr:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
         self._terminal.write(str(text) + end)
+
+    def __enter__(self) -> "Snurr":
+        """Enter the context manager, starting the spinner.
+
+        Returns:
+            Snurr: The spinner instance for use in the context.
+        """
+        self.start()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[object],
+    ) -> None:
+        """Exit the context manager, stopping the spinner.
+
+        Args:
+            exc_type: The type of the exception that occurred, if any
+            exc_val: The instance of the exception that occurred, if any
+            exc_tb: The traceback of the exception that occurred, if any
+        """
+        self.stop()
