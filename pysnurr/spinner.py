@@ -4,7 +4,7 @@ import threading
 import time
 
 
-class SpinnerStyles:
+class Styles:
     """Collection of spinner animation styles."""
 
     DOTS: str = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Default braille dots
@@ -53,7 +53,7 @@ class Snurr:
     def __init__(
         self,
         delay: float = 0.1,
-        symbols: str = SpinnerStyles.CLASSIC,
+        symbols: str = Styles.CLASSIC,
         append: bool = False,
     ) -> None:
         """Initialize the spinner.

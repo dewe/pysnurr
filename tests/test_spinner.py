@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from pysnurr import Snurr, SpinnerStyles
+from pysnurr import Snurr, Styles
 
 
 def test_init_default():
@@ -118,8 +118,8 @@ def test_cursor_handling():
 
 def test_all_spinner_styles():
     """Test all predefined spinner styles produce output"""
-    # Dynamically create an array from all SpinnerStyles
-    items = vars(SpinnerStyles).items()
+    # Dynamically create an array from all Styles
+    items = vars(Styles).items()
     styles = [value for _, value in items if isinstance(value, str)]
 
     for style in styles:
