@@ -66,7 +66,6 @@ class Snurr:
 
         Raises:
             ValueError: If delay is negative or symbols is empty/too long
-            TypeError: If symbols is not a string or delay is not a number
         """
         if delay < 0:
             raise ValueError("delay must be non-negative")
@@ -96,13 +95,20 @@ class Snurr:
             time.sleep(self.delay)
 
     def _update_symbol(self, new_symbol: str) -> None:
+        self._erase_current_symbol()
+        text = self._format_symbol(new_symbol)
+        self._terminal.write(text)
+        self._current_symbol = new_symbol
+
+    def _erase_current_symbol(self) -> None:
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
 
-        text = f" {new_symbol}" if self.append else new_symbol
-        self._terminal.write(text)
-        self._current_symbol = new_symbol
+    def _format_symbol(self, new_symbol: str) -> str:
+        if self.append:
+            return f" {new_symbol}"
+        return new_symbol
 
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
@@ -117,23 +123,16 @@ class Snurr:
         self.busy = False
         if self._spinner_thread:
             self._spinner_thread.join()
-            if self._current_symbol:
-                width = self._get_symbol_width(self._current_symbol)
-                self._terminal.erase(width)
+            self._erase_current_symbol()
             self._terminal.show_cursor()
             self._current_symbol = None
 
     def write(self, text: str | bytes, end: str = "\n") -> None:
         """Thread-safe write text to stdout while spinner is active."""
-        if self._current_symbol:
-            width = self._get_symbol_width(self._current_symbol)
-            self._terminal.erase(width)
-
+        self._erase_current_symbol()
         self._terminal.write(str(text) + end)
-
-        # Reset spinner position if writing without newline
         if not end.endswith("\n"):
-            self._current_symbol = None
+            self._current_symbol = None  # Reset spinner position
 
     def __enter__(self) -> "Snurr":
         """Enter the context manager, starting the spinner."""
