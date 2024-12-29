@@ -50,19 +50,6 @@ class TerminalWriter:
 class Snurr:
     """A non-blocking terminal spinner animation."""
 
-    # Make spinner styles available as class attributes for backward
-    # compatibility
-    DOTS: str = SpinnerStyles.DOTS
-    CLASSIC: str = SpinnerStyles.CLASSIC
-    BAR: str = SpinnerStyles.BAR
-    EARTH: str = SpinnerStyles.EARTH
-    MOON: str = SpinnerStyles.MOON
-    CLOCK: str = SpinnerStyles.CLOCK
-    ARROWS: str = SpinnerStyles.ARROWS
-    DOTS_BOUNCE: str = SpinnerStyles.DOTS_BOUNCE
-    TRIANGLES: str = SpinnerStyles.TRIANGLES
-    HEARTS: str = SpinnerStyles.HEARTS
-
     def __init__(
         self,
         delay: float = 0.1,
@@ -81,20 +68,13 @@ class Snurr:
             ValueError: If delay is negative or symbols is empty/too long
             TypeError: If symbols is not a string or delay is not a number
         """
-        if not isinstance(delay, int | float):
-            raise TypeError("delay must be a number")
         if delay < 0:
             raise ValueError("delay must be non-negative")
 
-        if not isinstance(symbols, str):
-            raise TypeError("symbols must be a string")
         if not symbols:
             raise ValueError("symbols cannot be empty")
         if len(symbols) > 100:  # Reasonable limit for animation frames
             raise ValueError("symbols string too long (max 100 characters)")
-
-        if not isinstance(append, bool):
-            raise TypeError("append must be a boolean")
 
         self.symbols: str = symbols
         self.delay: float = delay

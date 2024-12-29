@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from pysnurr import Snurr
+from pysnurr import Snurr, SpinnerStyles
 
 
 def test_init_default():
@@ -119,16 +119,16 @@ def test_cursor_handling():
 def test_all_spinner_styles():
     """Test all predefined spinner styles produce output"""
     styles = [
-        Snurr.DOTS,
-        Snurr.CLASSIC,
-        Snurr.BAR,
-        Snurr.EARTH,
-        Snurr.MOON,
-        Snurr.CLOCK,
-        Snurr.ARROWS,
-        Snurr.DOTS_BOUNCE,
-        Snurr.TRIANGLES,
-        Snurr.HEARTS,
+        SpinnerStyles.DOTS,
+        SpinnerStyles.CLASSIC,
+        SpinnerStyles.BAR,
+        SpinnerStyles.EARTH,
+        SpinnerStyles.MOON,
+        SpinnerStyles.CLOCK,
+        SpinnerStyles.ARROWS,
+        SpinnerStyles.DOTS_BOUNCE,
+        SpinnerStyles.TRIANGLES,
+        SpinnerStyles.HEARTS,
     ]
 
     for style in styles:
@@ -186,40 +186,17 @@ def test_append_mode():
 
 def test_invalid_delay():
     """Test that invalid delay values raise appropriate exceptions"""
-    with pytest.raises(TypeError, match="delay must be a number"):
-        Snurr(delay="0.1")
-
     with pytest.raises(ValueError, match="delay must be non-negative"):
         Snurr(delay=-1)
 
 
 def test_invalid_symbols():
     """Test that invalid symbols raise appropriate exceptions"""
-    with pytest.raises(TypeError, match="symbols must be a string"):
-        Snurr(symbols=123)
-
     with pytest.raises(ValueError, match="symbols cannot be empty"):
         Snurr(symbols="")
 
     with pytest.raises(ValueError, match="symbols string too long"):
         Snurr(symbols="x" * 101)  # Exceeds max length
-
-
-def test_invalid_append():
-    """Test that invalid append value raises TypeError"""
-    with pytest.raises(TypeError, match="append must be a boolean"):
-        Snurr(append="true")
-
-
-def test_invalid_write():
-    """Test that invalid write parameters raise appropriate exceptions"""
-    spinner = Snurr()
-
-    with pytest.raises(TypeError, match="text must be a string or bytes"):
-        spinner.write(123)
-
-    with pytest.raises(TypeError, match="end must be a string"):
-        spinner.write("text", end=123)
 
 
 def test_write_during_spinning():

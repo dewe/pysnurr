@@ -27,10 +27,10 @@ time.sleep(2)  # Do some work
 spinner.stop()
 
 # Choose from various spinner styles
-spinner = Snurr(symbols=Snurr.DOTS)     # ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏
-spinner = Snurr(symbols=Snurr.EARTH)    # 🌍🌎🌏
-spinner = Snurr(symbols=Snurr.CLOCK)    # 🕐🕑🕒...
-spinner = Snurr(symbols=Snurr.HEARTS)   # 💛💙💜💚
+spinner = Snurr(symbols=SpinnerStyles.DOTS)     # ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏
+spinner = Snurr(symbols=SpinnerStyles.EARTH)    # 🌍🌎🌏
+spinner = Snurr(symbols=SpinnerStyles.CLOCK)    # 🕐🕑🕒...
+spinner = Snurr(symbols=SpinnerStyles.HEARTS)   # 💛💙💜💚
 
 # Show spinner at end of line
 print("Processing", end="")
