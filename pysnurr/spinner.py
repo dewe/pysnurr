@@ -2,11 +2,11 @@ import itertools
 import sys
 import threading
 import time
-from typing import Optional, TypeAlias, Union
+from typing import TypeAlias
 
 SpinnerSymbols: TypeAlias = str
 Delay: TypeAlias = float
-TextContent: TypeAlias = Union[str, bytes]
+TextContent: TypeAlias = str | bytes
 
 
 class SpinnerStyles:
@@ -86,7 +86,7 @@ class Snurr:
             ValueError: If delay is negative or symbols is empty/too long
             TypeError: If symbols is not a string or delay is not a number
         """
-        if not isinstance(delay, (int, float)):
+        if not isinstance(delay, int | float):
             raise TypeError("delay must be a number")
         if delay < 0:
             raise ValueError("delay must be non-negative")
@@ -105,8 +105,8 @@ class Snurr:
         self.delay: Delay = delay
         self.append: bool = append
         self.busy: bool = False
-        self._spinner_thread: Optional[threading.Thread] = None
-        self._current_symbol: Optional[SpinnerSymbols] = None
+        self._spinner_thread: threading.Thread | None = None
+        self._current_symbol: SpinnerSymbols | None = None
         self._terminal: TerminalWriter = TerminalWriter()
 
     def _get_symbol_width(self, symbol: SpinnerSymbols) -> int:
@@ -163,7 +163,7 @@ class Snurr:
         Raises:
             TypeError: If text or end is not a string
         """
-        if not isinstance(text, (str, bytes)):
+        if not isinstance(text, str | bytes):
             raise TypeError("text must be a string or bytes")
         if not isinstance(end, str):
             raise TypeError("end must be a string")
@@ -190,9 +190,9 @@ class Snurr:
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[object],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object | None,
     ) -> None:
         """Exit the context manager, stopping the spinner.
 
