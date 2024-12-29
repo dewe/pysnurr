@@ -105,12 +105,10 @@ class Snurr:
         self._terminal: TerminalWriter = TerminalWriter()
 
     def _get_symbol_width(self, symbol: str) -> int:
-        """Calculate display width of a symbol."""
         width = len(symbol.encode("utf-16-le")) // 2
         return width + 1 if self.append else width
 
     def _spin(self) -> None:
-        """Internal method that handles the spinning animation."""
         for symbol in itertools.cycle(self.symbols):
             if not self.busy:
                 break
@@ -118,7 +116,6 @@ class Snurr:
             time.sleep(self.delay)
 
     def _update_symbol(self, new_symbol: str) -> None:
-        """Update the displayed spinner symbol."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
@@ -147,22 +144,7 @@ class Snurr:
             self._current_symbol = None
 
     def write(self, text: str | bytes, end: str = "\n") -> None:
-        """Write text to stdout safely.
-
-        Thread-safe write that won't interfere with the spinner animation.
-
-        Args:
-            text: The text to write
-            end: String appended after the text, defaults to newline
-
-        Raises:
-            TypeError: If text or end is not a string
-        """
-        if not isinstance(text, str | bytes):
-            raise TypeError("text must be a string or bytes")
-        if not isinstance(end, str):
-            raise TypeError("end must be a string")
-
+        """Thread-safe write text to stdout while spinner is active."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
@@ -171,15 +153,10 @@ class Snurr:
 
         # Reset spinner position if writing without newline
         if not end.endswith("\n"):
-            # Force redraw of spinner at new position
             self._current_symbol = None
 
     def __enter__(self) -> "Snurr":
-        """Enter the context manager, starting the spinner.
-
-        Returns:
-            Snurr: The spinner instance for use in the context.
-        """
+        """Enter the context manager, starting the spinner."""
         self.start()
         return self
 
@@ -189,11 +166,5 @@ class Snurr:
         exc_val: BaseException | None,
         exc_tb: object | None,
     ) -> None:
-        """Exit the context manager, stopping the spinner.
-
-        Args:
-            exc_type: The type of the exception that occurred, if any
-            exc_val: The instance of the exception that occurred, if any
-            exc_tb: The traceback of the exception that occurred, if any
-        """
+        """Exit the context manager, stopping the spinner."""
         self.stop()
