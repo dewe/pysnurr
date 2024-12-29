@@ -117,7 +117,12 @@ class Snurr:
         exc_tb: object | None,
     ) -> None:
         """Exit the context manager, stopping the spinner."""
-        self.stop()
+        if exc_type is KeyboardInterrupt:
+            self._terminal.erase(2)  # remove ^C
+            self.stop()
+            print("^C", end="")  # print ^C again
+        else:
+            self.stop()
 
     # Private helper methods
     def _get_symbol_width(self, symbol: str) -> int:

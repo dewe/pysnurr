@@ -213,9 +213,46 @@ def clean_backspaces_and_cursor_sequences(captured):
             if cleaned:  # Only remove last char if there is one
                 cleaned = cleaned[:-1]
             i += 1
+        elif captured[i] == "\033":  # ESC character
+            # Skip until end of ANSI sequence
+            i += 1
+            while i < len(captured) and not captured[i].isalpha():
+                i += 1
+            i += 1  # Skip the final letter
         else:
             cleaned += captured[i]
             i += 1
-    cleaned = cleaned.replace("\033[?25l", "")  # Hide cursor
-    cleaned = cleaned.replace("\033[?25h", "")  # Show cursor
     return cleaned
+
+
+def test_keyboard_interrupt_handling():
+    """Test that KeyboardInterrupt is handled gracefully in context manager"""
+    spinner = Snurr(symbols="X", delay=0.01)
+    stdout = StringIO()
+
+    with redirect_stdout(stdout):
+        try:
+            print("Text")
+            with spinner:
+                time.sleep(0.02)  # Let spinner run briefly
+                simulate_ctrl_c()
+        except KeyboardInterrupt:
+            pass  # Expected
+
+    # Verify cleanup
+    assert not spinner.busy  # Spinner stopped
+    thread_alive = (
+        spinner._spinner_thread is not None  # Check existence
+        and spinner._spinner_thread.is_alive()  # Check if running
+    )
+    assert not thread_alive
+    assert spinner._current_symbol is None  # Symbol cleared
+
+    # Verify final output is clean (no spinner remnants)
+    cleaned = clean_backspaces_and_cursor_sequences(stdout.getvalue())
+    assert cleaned == "Text\n^C"
+
+
+def simulate_ctrl_c():
+    print("^C", end="")
+    raise KeyboardInterrupt

@@ -1,6 +1,7 @@
 """Terminal output handling with thread safety.
 
-This module provides thread-safe terminal output operations for command-line applications.
+This module provides thread-safe terminal output operations
+for command-line applications.
 """
 
 import sys
