@@ -118,18 +118,9 @@ def test_cursor_handling():
 
 def test_all_spinner_styles():
     """Test all predefined spinner styles produce output"""
-    styles = [
-        SpinnerStyles.DOTS,
-        SpinnerStyles.CLASSIC,
-        SpinnerStyles.BAR,
-        SpinnerStyles.EARTH,
-        SpinnerStyles.MOON,
-        SpinnerStyles.CLOCK,
-        SpinnerStyles.ARROWS,
-        SpinnerStyles.DOTS_BOUNCE,
-        SpinnerStyles.TRIANGLES,
-        SpinnerStyles.HEARTS,
-    ]
+    # Dynamically create an array from all SpinnerStyles
+    items = vars(SpinnerStyles).items()
+    styles = [value for _, value in items if isinstance(value, str)]
 
     for style in styles:
         spinner = Snurr(delay=0.01, symbols=style)
