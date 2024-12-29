@@ -2,26 +2,21 @@ import itertools
 import sys
 import threading
 import time
-from typing import TypeAlias
-
-SpinnerSymbols: TypeAlias = str
-Delay: TypeAlias = float
-TextContent: TypeAlias = str | bytes
 
 
 class SpinnerStyles:
     """Collection of spinner animation styles."""
 
-    DOTS: SpinnerSymbols = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Default braille dots
-    CLASSIC: SpinnerSymbols = "/-\\|"  # Classic ASCII spinner
-    BAR: SpinnerSymbols = "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁"  # ASCII loading bar
-    EARTH: SpinnerSymbols = "🌍🌎🌏"  # Earth rotation
-    MOON: SpinnerSymbols = "🌑🌒🌓🌔🌕🌖🌗🌘"  # Moon phases
-    CLOCK: SpinnerSymbols = "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛"  # Clock rotation
-    ARROWS: SpinnerSymbols = "←↖↑↗→↘↓↙"  # Arrow rotation
-    DOTS_BOUNCE: SpinnerSymbols = ".oO°Oo."  # Bouncing dots
-    TRIANGLES: SpinnerSymbols = "◢◣◤◥"  # Rotating triangles
-    HEARTS: SpinnerSymbols = "💛💙💜💚"  # Colorful hearts
+    DOTS: str = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"  # Default braille dots
+    CLASSIC: str = "/-\\|"  # Classic ASCII spinner
+    BAR: str = "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁"  # ASCII loading bar
+    EARTH: str = "🌍🌎🌏"  # Earth rotation
+    MOON: str = "🌑🌒🌓🌔🌕🌖🌗🌘"  # Moon phases
+    CLOCK: str = "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛"  # Clock rotation
+    ARROWS: str = "←↖↑↗→↘↓↙"  # Arrow rotation
+    DOTS_BOUNCE: str = ".oO°Oo."  # Bouncing dots
+    TRIANGLES: str = "◢◣◤◥"  # Rotating triangles
+    HEARTS: str = "💛💙💜💚"  # Colorful hearts
 
 
 class TerminalWriter:
@@ -33,7 +28,7 @@ class TerminalWriter:
     def __init__(self) -> None:
         self._screen_lock: threading.Lock = threading.Lock()
 
-    def write(self, text: TextContent) -> None:
+    def write(self, text: str | bytes) -> None:
         """Write text to terminal with thread safety."""
         with self._screen_lock:
             sys.stdout.write(str(text))
@@ -57,21 +52,21 @@ class Snurr:
 
     # Make spinner styles available as class attributes for backward
     # compatibility
-    DOTS: SpinnerSymbols = SpinnerStyles.DOTS
-    CLASSIC: SpinnerSymbols = SpinnerStyles.CLASSIC
-    BAR: SpinnerSymbols = SpinnerStyles.BAR
-    EARTH: SpinnerSymbols = SpinnerStyles.EARTH
-    MOON: SpinnerSymbols = SpinnerStyles.MOON
-    CLOCK: SpinnerSymbols = SpinnerStyles.CLOCK
-    ARROWS: SpinnerSymbols = SpinnerStyles.ARROWS
-    DOTS_BOUNCE: SpinnerSymbols = SpinnerStyles.DOTS_BOUNCE
-    TRIANGLES: SpinnerSymbols = SpinnerStyles.TRIANGLES
-    HEARTS: SpinnerSymbols = SpinnerStyles.HEARTS
+    DOTS: str = SpinnerStyles.DOTS
+    CLASSIC: str = SpinnerStyles.CLASSIC
+    BAR: str = SpinnerStyles.BAR
+    EARTH: str = SpinnerStyles.EARTH
+    MOON: str = SpinnerStyles.MOON
+    CLOCK: str = SpinnerStyles.CLOCK
+    ARROWS: str = SpinnerStyles.ARROWS
+    DOTS_BOUNCE: str = SpinnerStyles.DOTS_BOUNCE
+    TRIANGLES: str = SpinnerStyles.TRIANGLES
+    HEARTS: str = SpinnerStyles.HEARTS
 
     def __init__(
         self,
-        delay: Delay = 0.1,
-        symbols: SpinnerSymbols = SpinnerStyles.CLASSIC,
+        delay: float = 0.1,
+        symbols: str = SpinnerStyles.CLASSIC,
         append: bool = False,
     ) -> None:
         """Initialize the spinner.
@@ -101,15 +96,15 @@ class Snurr:
         if not isinstance(append, bool):
             raise TypeError("append must be a boolean")
 
-        self.symbols: SpinnerSymbols = symbols
-        self.delay: Delay = delay
+        self.symbols: str = symbols
+        self.delay: float = delay
         self.append: bool = append
         self.busy: bool = False
         self._spinner_thread: threading.Thread | None = None
-        self._current_symbol: SpinnerSymbols | None = None
+        self._current_symbol: str | None = None
         self._terminal: TerminalWriter = TerminalWriter()
 
-    def _get_symbol_width(self, symbol: SpinnerSymbols) -> int:
+    def _get_symbol_width(self, symbol: str) -> int:
         """Calculate display width of a symbol."""
         width = len(symbol.encode("utf-16-le")) // 2
         return width + 1 if self.append else width
@@ -122,7 +117,7 @@ class Snurr:
             self._update_symbol(symbol)
             time.sleep(self.delay)
 
-    def _update_symbol(self, new_symbol: SpinnerSymbols) -> None:
+    def _update_symbol(self, new_symbol: str) -> None:
         """Update the displayed spinner symbol."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
@@ -151,7 +146,7 @@ class Snurr:
             self._terminal.show_cursor()
             self._current_symbol = None
 
-    def write(self, text: TextContent, end: str = "\n") -> None:
+    def write(self, text: str | bytes, end: str = "\n") -> None:
         """Write text to stdout safely.
 
         Thread-safe write that won't interfere with the spinner animation.

@@ -180,7 +180,8 @@ def test_append_mode():
     # Verify text remains and we can continue writing on the same line
     assert captured.startswith("Text")
     assert "More" in captured
-    assert "Text" in captured.split("More")[0]  # Text appears before continuation
+    # Text appears before continuation
+    assert "Text" in captured.split("More")[0]
 
 
 def test_invalid_delay():
