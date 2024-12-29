@@ -12,16 +12,18 @@ from .terminal import TerminalWriter
 
 # Spinner animation styles
 SPINNERS = {
-    "CLASSIC": "/-\\|",  # Classic ASCII spinner
-    "DOTS": "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏",  # Default braille dots
-    "BAR": "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁",  # ASCII loading bar
-    "EARTH": "🌍🌎🌏",  # Earth rotation
-    "MOON": "🌑🌒🌓🌔🌕🌖🌗🌘",  # Moon phases
-    "CLOCK": "🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛",  # Clock rotation
+    "CLASSIC": "/-\\|",  # Classic ASCII spinner (default)
     "ARROWS": "←↖↑↗→↘↓↙",  # Arrow rotation
-    "DOTS_BOUNCE": ".oO°Oo.",  # Bouncing dots
-    "TRIANGLES": "◢◣◤◥",  # Rotating triangles
+    "BAR": "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁",  # ASCII loading bar
+    "BLOCKS": "▌▀▐▄",  # Minimal blocks
+    "DOTS_BOUNCE": ".oOᐤ°ᐤOo.",  # Bouncing dots
+    "EARTH": "🌍🌎🌏",  # Earth rotation
     "HEARTS": "💛💙💜💚",  # Colorful hearts
+    "MOON": "🌑🌒🌓🌔🌕🌖🌗🌘",  # Moon phases
+    "SPARKLES": "✨⭐️💫",  # Sparkling animation
+    "TRIANGLES": "◢◣◤◥",  # Rotating triangles
+    "WAVE": "⎺⎻⎼⎽⎼⎻",  # Wave pattern
+    "WEATHER": "🌤️⛅️🌥️☁️🌧️⛈️",  # Weather cycle
 }
 
 
@@ -127,7 +129,7 @@ class Snurr:
     # Private helper methods
     def _get_symbol_width(self, symbol: str) -> int:
         """Calculate the display width of a symbol in terminal columns."""
-        width = len(symbol.encode("utf-16-le")) // 2
+        width = len(symbol.encode("utf-8"))
         return width + 1 if self.append else width
 
     def _spin(self) -> None:

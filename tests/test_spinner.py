@@ -201,28 +201,9 @@ def test_write_during_spinning():
         spinner.stop()
 
     captured = output.getvalue()
-    cleaned = clean_backspaces_and_cursor_sequences(captured)
+    cleaned = clean_escape_sequences(captured)
+    cleaned = simulate_backspaces(cleaned)
     assert "HelloThere" in cleaned
-
-
-def clean_backspaces_and_cursor_sequences(captured):
-    cleaned = ""
-    i = 0
-    while i < len(captured):
-        if captured[i] == "\b":
-            if cleaned:  # Only remove last char if there is one
-                cleaned = cleaned[:-1]
-            i += 1
-        elif captured[i] == "\033":  # ESC character
-            # Skip until end of ANSI sequence
-            i += 1
-            while i < len(captured) and not captured[i].isalpha():
-                i += 1
-            i += 1  # Skip the final letter
-        else:
-            cleaned += captured[i]
-            i += 1
-    return cleaned
 
 
 def test_keyboard_interrupt_handling():
@@ -249,8 +230,38 @@ def test_keyboard_interrupt_handling():
     assert spinner._current_symbol is None  # Symbol cleared
 
     # Verify final output is clean (no spinner remnants)
-    cleaned = clean_backspaces_and_cursor_sequences(stdout.getvalue())
+    cleaned = clean_escape_sequences(stdout.getvalue())
+    cleaned = simulate_backspaces(cleaned)
     assert cleaned == "Text\n^C"
+
+
+def simulate_backspaces(str):
+    result = ""
+    i = 0
+    while i < len(str):
+        if str[i] == "\b":
+            if result:  # Only remove last char if there is one
+                result = result[:-1]
+            i += 1
+        else:
+            result += str[i]
+            i += 1
+    return result
+
+
+def clean_escape_sequences(str):
+    result = ""
+    i = 0
+    while i < len(str):
+        if str[i] == "\033":  # ESC character
+            # Skip until end of ANSI sequence
+            while i < len(str) and not str[i].isalpha():
+                i += 1
+            i += 1  # Skip the final letter
+        else:
+            result += str[i]
+            i += 1
+    return result
 
 
 def simulate_ctrl_c():

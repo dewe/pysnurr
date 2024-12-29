@@ -29,8 +29,9 @@ spinner.stop()
 # Choose from various spinner styles
 spinner = Snurr(symbols=SPINNERS["CLASSIC"])  # /-\|
 spinner = Snurr(symbols=SPINNERS["EARTH"])    # 🌍🌎🌏
-spinner = Snurr(symbols=SPINNERS["CLOCK"])    # 🕐🕑🕒...
 spinner = Snurr(symbols=SPINNERS["HEARTS"])   # 💛💙💜💚
+spinner = Snurr(symbols=SPINNERS["MOON"])     # 🌑🌒🌓🌔🌕🌖🌗🌘
+...
 
 # Show spinner at end of line
 print("Processing", end="")

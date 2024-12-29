@@ -8,8 +8,8 @@ def demo_basic() -> None:
     print("\n=== Basic Usage ===")
 
     print("\nContext manager (recommended):")
-    with Snurr():
-        sleep(2)  # Simulate work
+    with Snurr(symbols=SPINNERS["WEATHER"]):
+        sleep(4)  # Simulate work
 
     print("\nTraditional usage:")
     spinner = Snurr()
