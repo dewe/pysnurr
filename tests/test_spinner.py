@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from pysnurr import Snurr, Styles
+from pysnurr import SPINNERS, Snurr
 
 
 def test_init_default():
@@ -118,11 +118,7 @@ def test_cursor_handling():
 
 def test_all_spinner_styles():
     """Test all predefined spinner styles produce output"""
-    # Dynamically create an array from all Styles
-    items = vars(Styles).items()
-    styles = [value for _, value in items if isinstance(value, str)]
-
-    for style in styles:
+    for style in SPINNERS.values():
         spinner = Snurr(delay=0.01, symbols=style)
         output = StringIO()
         with redirect_stdout(output):
@@ -207,10 +203,6 @@ def test_write_during_spinning():
     captured = output.getvalue()
     cleaned = clean_backspaces_and_cursor_sequences(captured)
     assert "HelloThere" in cleaned
-    # Verify spinner appears after the text
-    # hello_pos = captured.find("HelloThere")
-    # spinner_output = captured[hello_pos + 5 :]  # After "Hello"
-    # assert len(spinner_output.strip()) > 0  # Spinner continued after text
 
 
 def clean_backspaces_and_cursor_sequences(captured):

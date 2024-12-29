@@ -13,7 +13,7 @@ pip install pysnurr
 ## Usage
 
 ```python
-from pysnurr import Snurr
+from pysnurr import Snurr, SPINNERS
 import time
 
 # Basic usage with context manager (recommended)
@@ -27,10 +27,10 @@ time.sleep(2)  # Do some work
 spinner.stop()
 
 # Choose from various spinner styles
-spinner = Snurr(symbols=Styles.CLASSIC)  # /-\|
-spinner = Snurr(symbols=Styles.EARTH)    # 🌍🌎🌏
-spinner = Snurr(symbols=Styles.CLOCK)    # 🕐🕑🕒...
-spinner = Snurr(symbols=Styles.HEARTS)   # 💛💙💜💚
+spinner = Snurr(symbols=SPINNERS["CLASSIC"])  # /-\|
+spinner = Snurr(symbols=SPINNERS["EARTH"])    # 🌍🌎🌏
+spinner = Snurr(symbols=SPINNERS["CLOCK"])    # 🕐🕑🕒...
+spinner = Snurr(symbols=SPINNERS["HEARTS"])   # 💛💙💜💚
 
 # Show spinner at end of line
 print("Processing", end="")
@@ -39,7 +39,7 @@ with Snurr(append=True) as spinner:  # Adds space before spinner
 print(" Done!")
 
 # Thread-safe output during spinning
-with Snurr(symbols=Snurr.EARTH) as spinner:
+with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
     spinner.write("Starting a long process...")
     time.sleep(1)
     spinner.write("Step 1: Data processing")

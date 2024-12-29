@@ -1,6 +1,6 @@
 from time import sleep
 
-from pysnurr import Snurr, Styles
+from pysnurr import SPINNERS, Snurr
 
 
 def demo_basic() -> None:
@@ -21,21 +21,10 @@ def demo_basic() -> None:
 def demo_styles() -> None:
     """Demo all available spinner styles"""
     print("\n=== Spinner Styles ===")
-    styles = {
-        "CLASSIC (default)": Styles.CLASSIC,
-        "DOTS": Styles.DOTS,
-        "BAR": Styles.BAR,
-        "EARTH": Styles.EARTH,
-        "MOON": Styles.MOON,
-        "CLOCK": Styles.CLOCK,
-        "ARROWS": Styles.ARROWS,
-        "DOTS_BOUNCE": Styles.DOTS_BOUNCE,
-        "TRIANGLES": Styles.TRIANGLES,
-        "HEARTS": Styles.HEARTS,
-    }
 
-    for name, style in styles.items():
-        print(f"\nStyle: {name}")
+    for name, style in SPINNERS.items():
+        style_name = f"{name} (default)" if name == "CLASSIC" else name
+        print(f"\nStyle: {style_name}")
         with Snurr(symbols=style):
             sleep(2)
 
@@ -46,7 +35,7 @@ def demo_with_output() -> None:
 
     # Using synchronized write method
     print("\nUsing synchronized write method:")
-    with Snurr(symbols=Styles.EARTH) as spinner:
+    with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
         spinner.write("Starting a long process...")
         sleep(1)
         spinner.write("Step 1: Data processing")
@@ -56,7 +45,7 @@ def demo_with_output() -> None:
 
     # Spinner at end of line with synchronized writes
     print("\nSpinner at end of line:")
-    with Snurr(symbols=Styles.HEARTS, append=True) as spinner:
+    with Snurr(symbols=SPINNERS["HEARTS"], append=True) as spinner:
         for i in range(3):
             spinner.write(f"\rLine {i+1} while spinning", end="")
             sleep(1)
