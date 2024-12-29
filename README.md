@@ -65,23 +65,23 @@ with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
 - Thread-safe output
 - No external dependencies
 - Flexible positioning (new line or end of text)
-- Python 3.7+ support
+- Python 3.10+ support
 
 ## Development
 
-Clone the repository and install in development mode:
+Clone the repository and install in development mode with all development dependencies:
 
 ```bash
 git clone https://github.com/dewe/pysnurr.git
 cd pysnurr
-pip install -e .
+make dev-install  # Installs package and test dependencies
 ```
 
-Run tests:
+Run tests and checks:
 
 ```bash
-pip install pytest
-python -m pytest tests/
+make test        # Run type checking and tests
+make lint        # Run code style checks (black & ruff)
 ```
 
 ## License
