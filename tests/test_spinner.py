@@ -163,12 +163,24 @@ def test_append_mode():
         spinner.stop()
         print("More", end="")  # Should be able to continue the line
 
-    captured = output.getvalue()
-    # Verify text remains and we can continue writing on the same line
-    assert captured.startswith("Text")
-    assert "More" in captured
-    # Text appears before continuation
-    assert "Text" in captured.split("More")[0]
+    cleaned = simulate_backspaces(clean_escape_sequences(output.getvalue()))
+    assert cleaned == "TextMore"
+
+
+def test_append_mode_wide_chars():
+    """Test spinner appears at end of line in append mode"""
+    spinner = Snurr(delay=0.01, append=True, symbols="🌍🌎🌏")
+    output = StringIO()
+
+    with redirect_stdout(output):
+        print("Text", end="")
+        spinner.start()
+        time.sleep(0.02)
+        spinner.stop()
+        print("More", end="")  # Should be able to continue the line
+
+    cleaned = simulate_backspaces(clean_escape_sequences(output.getvalue()))
+    assert cleaned == "TextMore"
 
 
 def test_invalid_delay():
