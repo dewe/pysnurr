@@ -17,10 +17,12 @@ class TerminalWriter:
     def __init__(self) -> None:
         self._screen_lock: threading.Lock = threading.Lock()
 
-    def write(self, text: str | bytes) -> None:
+    def write(self, text: str | bytes, end: str = "\n") -> None:
         """Write text to terminal with thread safety."""
+        if isinstance(text, bytes):
+            text = text.decode(sys.stdout.encoding or "utf-8")
         with self._screen_lock:
-            sys.stdout.write(str(text))
+            sys.stdout.write(text)
             sys.stdout.flush()
 
     def erase(self, width: int) -> None:

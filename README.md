@@ -35,7 +35,7 @@ spinner = Snurr(symbols=SPINNERS["MOON"])     # 🌑🌒🌓🌔🌕🌖🌗🌘
 
 # Show spinner at end of line
 print("Processing", end="")
-with Snurr(append=True) as spinner:  # Adds space before spinner
+with Snurr() as spinner:
     time.sleep(2)
 print(" Done!")
 
@@ -53,19 +53,19 @@ with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
 - Non-blocking animation
 - Multiple built-in spinner styles:
   - `CLASSIC`: Classic ASCII spinner (/-\|)
-  - `DOTS`: Braille dots animation
-  - `BAR`: ASCII loading bar
+  - `ARROWS`: Arrow rotation (←↖↑↗→↘↓↙)
+  - `BAR`: ASCII loading bar (▁▂▃▄▅▆▇█▇▆▅▄▃▂▁)
+  - `BLOCKS`: Minimal blocks (▌▀▐▄)
+  - `DOTS_BOUNCE`: Bouncing dots (.oOᐤ°ᐤOo.)
   - `EARTH`: Earth rotation (🌍🌎🌏)
-  - `MOON`: Moon phases
-  - `CLOCK`: Clock rotation
-  - `ARROWS`: Arrow rotation
-  - `DOTS_BOUNCE`: Bouncing dots
-  - `TRIANGLES`: Rotating triangles
-  - `HEARTS`: Colorful hearts
+  - `HEARTS`: Colorful hearts (💛💙💜💚)
+  - `MOON`: Moon phases (🌑🌒🌓🌔🌕🌖🌗🌘)
+  - `SPARKLES`: Sparkling animation (✨⭐️💫)
+  - `TRIANGLES`: Rotating triangles (◢◣◤◥)
+  - `WAVE`: Wave pattern (⎺⎻⎼⎽⎼⎻)
 - Cursor hiding during animation
 - Thread-safe output
-- No external dependencies
-- Flexible positioning (new line or end of text)
+- Flexible positioning at current cursor position
 - Python 3.10+ support
 
 ## Development

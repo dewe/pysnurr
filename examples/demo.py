@@ -8,8 +8,8 @@ def demo_basic() -> None:
     print("\n=== Basic Usage ===")
 
     print("\nContext manager (recommended):")
-    with Snurr(symbols=SPINNERS["WEATHER"]):
-        sleep(4)  # Simulate work
+    with Snurr():
+        sleep(2)  # Simulate work
 
     print("\nTraditional usage:")
     spinner = Snurr()
@@ -45,9 +45,9 @@ def demo_with_output() -> None:
 
     # Spinner at end of line with synchronized writes
     print("\nSpinner at end of line:")
-    with Snurr(symbols=SPINNERS["HEARTS"], append=True) as spinner:
+    with Snurr(symbols=SPINNERS["HEARTS"]) as spinner:
         for i in range(3):
-            spinner.write(f"\rLine {i+1} while spinning", end="")
+            spinner.write(f"\rLine {i+1} while spinning", end=" ")
             sleep(1)
 
     print("\nDone!")

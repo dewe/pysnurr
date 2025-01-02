@@ -8,6 +8,9 @@ import itertools
 import threading
 import time
 
+import regex
+import wcwidth  # type: ignore
+
 from .terminal import TerminalWriter
 
 # Spinner animation styles
@@ -23,7 +26,6 @@ SPINNERS = {
     "SPARKLES": "✨⭐️💫",  # Sparkling animation
     "TRIANGLES": "◢◣◤◥",  # Rotating triangles
     "WAVE": "⎺⎻⎼⎽⎼⎻",  # Wave pattern
-    "WEATHER": "🌤️⛅️🌥️☁️🌧️⛈️",  # Weather cycle
 }
 
 
@@ -45,14 +47,12 @@ class Snurr:
         self,
         delay: float = 0.1,
         symbols: str = SPINNERS["CLASSIC"],
-        append: bool = False,
     ) -> None:
         """Initialize the spinner.
 
         Args:
             delay: Time between spinner updates in seconds
             symbols: String containing spinner animation frames
-            append: If True, adds space and shows spinner at line end
 
         Raises:
             ValueError: If delay is negative or symbols is empty/too long
@@ -65,9 +65,8 @@ class Snurr:
         if len(symbols) > 100:
             raise ValueError("symbols string too long (max 100 characters)")
 
-        self.symbols: str = symbols
+        self.symbols: list[str] = self._split_graphemes(symbols)
         self.delay: float = delay
-        self.append: bool = append
         self.busy: bool = False
         self._spinner_thread: threading.Thread | None = None
         self._current_symbol: str | None = None
@@ -88,8 +87,8 @@ class Snurr:
         if self._spinner_thread:
             self._spinner_thread.join()
             self._erase_current_symbol()
-            self._terminal.show_cursor()
             self._current_symbol = None
+            self._terminal.show_cursor()
 
     def write(self, text: str | bytes, end: str = "\n") -> None:
         """Write text to stdout while spinner is active.
@@ -98,13 +97,13 @@ class Snurr:
         The spinner will be temporarily cleared before writing.
 
         Args:
-            text: The text to write
+            text: The text to write (string or bytes)
             end: String to append after the text (default: newline)
         """
         self._erase_current_symbol()
-        self._terminal.write(str(text) + end)
         if not end.endswith("\n"):
-            self._current_symbol = None  # Reset spinner position
+            self._current_symbol = None  # Resets spinner position
+        self._terminal.write(text, end)
 
     # Context manager methods
     def __enter__(self) -> "Snurr":
@@ -127,10 +126,17 @@ class Snurr:
             self.stop()
 
     # Private helper methods
+    def _split_graphemes(self, text: str) -> list[str]:
+        """Split a string into an array of grapheme clusters using regex."""
+        return regex.findall(r"\X", text)
+
     def _get_symbol_width(self, symbol: str) -> int:
-        """Calculate the display width of a symbol in terminal columns."""
-        width = len(symbol.encode("utf-8"))
-        return width + 1 if self.append else width
+        """Simplified calculation of the display width of a symbol."""
+        width = 0
+        for char in symbol:
+            char_width = wcwidth.wcwidth(char)
+            width += char_width
+        return width
 
     def _spin(self) -> None:
         """Main spinner animation loop."""
@@ -142,10 +148,9 @@ class Snurr:
 
     def _update_symbol(self, new_symbol: str) -> None:
         """Update the displayed spinner symbol."""
-        self._erase_current_symbol()
-        text = self._format_symbol(new_symbol)
-        self._terminal.write(text)
+        self._move_left_current_symbol()
         self._current_symbol = new_symbol
+        self._terminal.write(new_symbol)
 
     def _erase_current_symbol(self) -> None:
         """Erase the current spinner symbol from the terminal."""
@@ -153,8 +158,8 @@ class Snurr:
             width = self._get_symbol_width(self._current_symbol)
             self._terminal.erase(width)
 
-    def _format_symbol(self, new_symbol: str) -> str:
-        """Format a symbol for display, adding space if append is True."""
-        if self.append:
-            return f" {new_symbol}"
-        return new_symbol
+    def _move_left_current_symbol(self) -> None:
+        """Move the cursor to the left of current spinner symbol."""
+        if self._current_symbol:
+            width = self._get_symbol_width(self._current_symbol)
+            self._terminal.write(f"\033[{width}D")
