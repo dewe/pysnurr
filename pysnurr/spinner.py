@@ -90,6 +90,8 @@ class Snurr:
             self._current_symbol = None
             self._terminal.show_cursor()
 
+    # TODO: replace write with status, and add a status property
+
     def write(self, text: str, end: str = "\n") -> None:
         """Write text to stdout while spinner is active.
 
