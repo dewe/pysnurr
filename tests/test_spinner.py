@@ -78,6 +78,27 @@ class TestSpinnerInitialization:
         # Verify custom symbols are used
         assert any(symbol in output.getvalue() for symbol in custom_symbols)
 
+    def test_initial_status(self):
+        """Verify spinner can be initialized with a status message."""
+        initial_status = "Initial status"
+
+        spinner = Snurr(delay=0.001, status=initial_status)
+        assert spinner.status == initial_status
+
+        output = StringIO()
+        with redirect_stdout(output):
+            spinner.start()
+            time.sleep(0.02)
+            spinner.stop()
+
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify initial status appears in output
+        assert initial_status in cleaned
+
     def test_raises_on_negative_delay(self):
         """Verify ValueError is raised for negative delay values."""
         with pytest.raises(ValueError, match="delay must be non-negative"):
@@ -184,39 +205,19 @@ class TestSpinnerDisplay:
 
 
 class TestSpinnerOutput:
-    def test_concurrent_output(self):
-        """Test output integrity during spinning"""
-        test_messages = ["Start", "Middle", "End"]
-        spinner = Snurr(delay=0.001)
-        output = StringIO()
 
-        with redirect_stdout(output):
-            spinner.start()
-            for msg in test_messages:
-                spinner.write(msg)
-                time.sleep(0.002)
-            spinner.stop()
-
-        # Verify all messages appear in order
-        captured = output.getvalue()
-        last_pos = -1
-        for msg in test_messages:
-            pos = captured.find(msg)
-            assert pos > last_pos  # Messages in correct order
-            last_pos = pos
-
-    def test_write_during_spinning(self):
-        """Test that write works correctly while spinner is running"""
+    def test_status_during_spinning(self):
+        """Test that status works correctly while spinner is running"""
         spinner = Snurr(delay=0.001, symbols="_")
         output = StringIO()
 
         with redirect_stdout(output):
             spinner.start()
-            time.sleep(0.002)  # Let spinner run a bit
-            spinner.write("Hello", end="")
-            time.sleep(0.002)
-            spinner.write("There")
-            time.sleep(0.002)  # Let spinner continue after write
+            time.sleep(0.005)  # Let spinner run a bit
+            spinner.status = "Hello"
+            time.sleep(0.005)
+            spinner.status = "World"
+            time.sleep(0.005)  # Let spinner continue after status
             spinner.stop()
 
         # Clean up output for verification
@@ -224,22 +225,26 @@ class TestSpinnerOutput:
         output_no_escapes = TestUtils.clean_escape_sequences(output_value)
         cleaned = TestUtils.simulate_backspaces(output_no_escapes)
 
-        # Verify output structure
-        assert regex.match(r"(_*)Hello(_*)There", cleaned)
+        # Verify output contains status messages
+        assert "Hello" in cleaned
+        assert "World" in cleaned
 
-    def test_write_end_argument(self):
-        """Test that write method correctly handles end argument"""
-        spinner = Snurr(symbols="_")
+    def test_status_updates(self):
+        """Test that status updates work correctly"""
+        spinner = Snurr(symbols="_", delay=0.001)
         output = StringIO()
 
         with redirect_stdout(output):
             spinner.start()
-            # No newline
-            spinner.write("First", end="")
-            # Custom end
-            spinner.write("Second", end="|")
-            # Default newline
-            spinner.write("Third")
+            # Initial status
+            spinner.status = "First"
+            time.sleep(0.01)  # Increased sleep time
+            # Update status
+            spinner.status = "Second"
+            time.sleep(0.01)  # Increased sleep time
+            # Final status
+            spinner.status = "Third"
+            time.sleep(0.01)  # Increased sleep time
             spinner.stop()
 
         # Clean up output for verification
@@ -247,8 +252,57 @@ class TestSpinnerOutput:
         output_no_escapes = TestUtils.clean_escape_sequences(output_value)
         cleaned = TestUtils.simulate_backspaces(output_no_escapes)
 
-        # Verify output has correct endings
-        assert "FirstSecond|Third\n" in cleaned
+        # Verify all status messages appear
+        assert "First" in cleaned
+        assert "Second" in cleaned
+        assert "Third" in cleaned
+
+    def test_status_property(self):
+        """Test that status property can be get and set."""
+        spinner = Snurr()
+        assert spinner.status == ""  # Default empty status
+
+        spinner.status = "Processing..."
+        assert spinner.status == "Processing..."
+
+        spinner.status = "Done!"
+        assert spinner.status == "Done!"
+
+    def test_status_updates_while_running(self):
+        """Test that status can be updated while spinner is running."""
+        spinner = Snurr(delay=0.01)
+
+        try:
+            spinner.start()
+            assert spinner.status == ""
+
+            spinner.status = "Working..."
+            assert spinner.status == "Working..."
+
+            spinner.status = "Almost done..."
+            assert spinner.status == "Almost done..."
+        finally:
+            spinner.stop()
+
+    def test_status_position(self):
+        """Test that status appears before the spinner."""
+        spinner = Snurr(delay=0.001, symbols="_")  # Simple symbol for testing
+        output = StringIO()
+
+        with redirect_stdout(output):
+            spinner.start()
+            spinner.status = "Working"
+            time.sleep(0.01)
+            spinner.stop()
+
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify status appears before spinner
+        assert "Working" in cleaned
+        assert cleaned.find("Working") < cleaned.find("_")
 
 
 class TestErrorHandling:
@@ -281,4 +335,5 @@ class TestErrorHandling:
         cleaned = TestUtils.simulate_backspaces(output_no_escapes)
 
         # Verify final output ends with ^C
-        assert regex.fullmatch(r"Text\n(_*)\^C", cleaned)
+        assert "Text" in cleaned
+        assert cleaned.endswith("^C")

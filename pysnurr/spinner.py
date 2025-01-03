@@ -47,12 +47,14 @@ class Snurr:
         self,
         delay: float = 0.1,
         symbols: str = SPINNERS["CLASSIC"],
+        status: str = "",
     ) -> None:
         """Initialize the spinner.
 
         Args:
             delay: Time between spinner updates in seconds
             symbols: String containing spinner animation frames
+            status: Initial status message to display
 
         Raises:
             ValueError: If delay is negative or symbols is empty/too long
@@ -71,6 +73,7 @@ class Snurr:
         self._spinner_thread: threading.Thread | None = None
         self._current_symbol: str | None = None
         self._terminal: TerminalWriter = TerminalWriter()
+        self._status: str = status
 
     # Context manager methods
     def __enter__(self) -> "Snurr":
@@ -109,14 +112,25 @@ class Snurr:
             self._clear_current_symbol()
             self._terminal.show_cursor()
 
-    def write(self, text: str, end: str = "\n") -> None:
-        """Write text to stdout while spinner is active.
+    @property
+    def status(self) -> str:
+        """Get the current status message."""
+        return self._status
 
-        Thread-safe method to write text while the spinner is running.
-        The spinner will be temporarily cleared before writing.
+    @status.setter
+    def status(self, value: str) -> None:
+        """Set a new status message.
+
+        The status will be displayed next to the spinner and can be
+        updated while the spinner is running.
+
+        Args:
+            value: The status message to display
         """
-        self._clear_current_symbol()
-        self._terminal.write(text + end)
+        self._clear_current_line()
+        self._status = value
+        if self._current_symbol:
+            self._update_symbol(self._current_symbol)
 
     # Private helper methods - Text processing
     def _split_graphemes(self, text: str) -> list[str]:
@@ -135,22 +149,35 @@ class Snurr:
             self._update_symbol(next(symbols))
             time.sleep(self.delay)
 
-    def _update_symbol(self, new_symbol: str) -> None:
-        """Update the displayed spinner symbol."""
-        self._current_symbol = new_symbol
-        self._terminal.write(new_symbol)
-        self._move_left_current_symbol()
-
-    def _clear_current_symbol(self) -> None:
-        """Erase the current spinner symbol from the terminal."""
+    def _clear_current_line(self) -> None:
+        """Clear the current line containing spinner and status."""
         if self._current_symbol:
-            width = self._get_symbol_width(self._current_symbol)
+            symbol_width = self._get_symbol_width(self._current_symbol)
+            width = symbol_width + len(self._status)
+            if self._status:
+                width += 1  # Add space between status and spinner
             self._terminal.move_cursor_right(width)
             self._terminal.erase(width)
             self._current_symbol = None
 
-    def _move_left_current_symbol(self) -> None:
-        """Move the cursor to the left of current spinner symbol."""
+    def _clear_current_symbol(self) -> None:
+        """Erase the current spinner symbol and status from the terminal."""
+        self._clear_current_line()
+
+    def _update_symbol(self, new_symbol: str) -> None:
+        """Update the displayed spinner symbol and status."""
+        self._current_symbol = new_symbol
+        display = ""
+        if self._status:
+            display = self._status + " "  # Space after status
+        display += new_symbol
+        self._terminal.write(display)
+        self._move_left_current_line()
+
+    def _move_left_current_line(self) -> None:
+        """Move the cursor to the left of current line."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
+            if self._status:
+                width += len(self._status) + 1  # +1 for the space
             self._terminal.move_cursor_left(width)

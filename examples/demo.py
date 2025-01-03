@@ -8,12 +8,14 @@ def demo_basic() -> None:
     print("\n=== Basic Usage ===")
 
     print("\nContext manager (recommended):")
-    with Snurr():
+    with Snurr() as spinner:
+        spinner.status = "Working..."
         sleep(2)  # Simulate work
 
     print("\nTraditional usage:")
     spinner = Snurr()
     spinner.start()
+    spinner.status = "Processing..."
     sleep(2)  # Simulate work
     spinner.stop()
 
@@ -29,28 +31,20 @@ def demo_styles() -> None:
             sleep(2)
 
 
-def demo_with_output() -> None:
-    """Demo spinner with concurrent stdout writes"""
-    print("\n=== Spinner with Output ===")
+def demo_status_updates() -> None:
+    """Demo dynamic status updates"""
+    print("\n=== Status Updates ===")
 
-    # Using synchronized write method
-    print("\nUsing synchronized write method:")
+    print("\nUpdating status while spinning:")
     with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
-        spinner.write("Starting a long process...")
+        spinner.status = "Starting up..."
         sleep(1)
-        spinner.write("Step 1: Data processing")
+        spinner.status = "Processing files..."
+        sleep(1.5)
+        spinner.status = "Analyzing data..."
         sleep(1)
-        spinner.write("Step 2: Analysis complete")
-        sleep(1)
-
-    # Spinner at end of line with synchronized writes
-    print("\nSpinner at end of line:")
-    with Snurr(symbols=SPINNERS["HEARTS"]) as spinner:
-        for i in range(3):
-            spinner.write(f"\rLine {i+1} while spinning", end=" ")
-            sleep(1)
-
-    print("\nDone!")
+        spinner.status = "Finishing up..."
+        sleep(0.5)
 
 
 def demo_custom() -> None:
@@ -58,7 +52,7 @@ def demo_custom() -> None:
     print("\n=== Custom Spinner ===")
     print("Custom symbols and slower speed:")
     with Snurr(symbols="◉◎", delay=0.5):
-        sleep(4)
+        sleep(3)
 
 
 if __name__ == "__main__":
@@ -68,7 +62,7 @@ if __name__ == "__main__":
     try:
         demo_basic()
         demo_styles()
-        demo_with_output()
+        demo_status_updates()
         demo_custom()
 
         print("\nDemo completed! 🎉")
