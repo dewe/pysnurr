@@ -90,20 +90,16 @@ class Snurr:
             self._current_symbol = None
             self._terminal.show_cursor()
 
-    def write(self, text: str | bytes, end: str = "\n") -> None:
+    def write(self, text: str, end: str = "\n") -> None:
         """Write text to stdout while spinner is active.
 
         Thread-safe method to write text while the spinner is running.
         The spinner will be temporarily cleared before writing.
-
-        Args:
-            text: The text to write (string or bytes)
-            end: String to append after the text (default: newline)
         """
         self._erase_current_symbol()
+        self._terminal.write(text + end)
         if not end.endswith("\n"):
             self._current_symbol = None  # Resets spinner position
-        self._terminal.write(text, end)
 
     # Context manager methods
     def __enter__(self) -> "Snurr":

@@ -154,9 +154,12 @@ class TestSpinnerDisplay:
             spinner.stop()
             print("More", end="")  # Should be able to continue the line
 
-        cleaned = TestUtils.simulate_backspaces(
-            TestUtils.clean_escape_sequences(output.getvalue())
-        )
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify output structure
         assert regex.match(r"Text(_*)More", cleaned)
 
     def test_spinner_at_end_of_line_wide_chars(self):
@@ -171,9 +174,12 @@ class TestSpinnerDisplay:
             spinner.stop()
             print("More", end="")  # Should be able to continue the line
 
-        cleaned = TestUtils.simulate_backspaces(
-            TestUtils.clean_escape_sequences(output.getvalue())
-        )
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify output structure
         assert regex.match(r"Text(\X*)More", cleaned)
 
 
@@ -213,38 +219,45 @@ class TestSpinnerOutput:
             time.sleep(0.002)  # Let spinner continue after write
             spinner.stop()
 
-        cleaned = TestUtils.simulate_backspaces(
-            TestUtils.clean_escape_sequences(output.getvalue())
-        )
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify output structure
         assert regex.match(r"(_*)Hello(_*)There", cleaned)
 
-    def test_write_bytes(self):
-        """Test that write works correctly with bytes input"""
-        spinner = Snurr(delay=0.001, symbols="_")
+    def test_write_end_argument(self):
+        """Test that write method correctly handles end argument"""
+        spinner = Snurr(symbols="_")
         output = StringIO()
 
         with redirect_stdout(output):
             spinner.start()
-            time.sleep(0.002)  # Let spinner run a bit
-            spinner.write(b"Hello", end="")
-            time.sleep(0.002)
-            spinner.write(b"There")
-            time.sleep(0.002)  # Let spinner continue after write
+            # No newline
+            spinner.write("First", end="")
+            # Custom end
+            spinner.write("Second", end="|")
+            # Default newline
+            spinner.write("Third")
             spinner.stop()
 
-        cleaned = TestUtils.simulate_backspaces(
-            TestUtils.clean_escape_sequences(output.getvalue())
-        )
-        assert regex.match(r"(_*)Hello(_*)There", cleaned)
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+
+        # Verify output has correct endings
+        assert "FirstSecond|Third\n" in cleaned
 
 
 class TestErrorHandling:
     def test_keyboard_interrupt_handling(self):
         """Verify spinner cleans up properly when interrupted."""
         spinner = Snurr(symbols="_", delay=0.001)
-        stdout = StringIO()
+        output = StringIO()
 
-        with redirect_stdout(stdout):
+        with redirect_stdout(output):
             try:
                 print("Text")
                 with spinner:
@@ -253,18 +266,19 @@ class TestErrorHandling:
             except KeyboardInterrupt:
                 pass  # Expected
 
-        assert not spinner.busy, "Spinner should not be busy after interruption"
+        # Verify cleanup state
+        assert not spinner.busy
+        assert spinner._current_symbol is None
 
-        # Check thread cleanup
-        thread_exists = (
-            spinner._spinner_thread is not None and spinner._spinner_thread.is_alive()
-        )
-        assert not thread_exists, "Spinner thread should not be running"
+        # Check thread is cleaned up
+        has_thread = spinner._spinner_thread is not None
+        is_alive = has_thread and spinner._spinner_thread.is_alive()
+        assert not is_alive
 
-        assert spinner._current_symbol is None, "Current symbol should be cleared"
+        # Clean up output for verification
+        output_value = output.getvalue()
+        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
 
         # Verify final output ends with ^C
-        cleaned = TestUtils.simulate_backspaces(
-            TestUtils.clean_escape_sequences(stdout.getvalue())
-        )
         assert regex.fullmatch(r"Text\n(_*)\^C", cleaned)

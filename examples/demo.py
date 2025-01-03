@@ -66,8 +66,8 @@ if __name__ == "__main__":
     print("Press Ctrl+C to exit at any time")
 
     try:
-        demo_basic()
-        demo_styles()
+        # demo_basic()
+        # demo_styles()
         demo_with_output()
         demo_custom()
 
