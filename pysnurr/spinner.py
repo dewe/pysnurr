@@ -72,6 +72,26 @@ class Snurr:
         self._current_symbol: str | None = None
         self._terminal: TerminalWriter = TerminalWriter()
 
+    # Context manager methods
+    def __enter__(self) -> "Snurr":
+        """Enter the context manager, starting the spinner."""
+        self.start()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object | None,
+    ) -> None:
+        """Exit the context manager, stopping the spinner."""
+        if exc_type is KeyboardInterrupt:
+            self._terminal.erase(2)  # remove ^C
+            self.stop()
+            print("^C", end="")  # print ^C again
+        else:
+            self.stop()
+
     # Public interface methods
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
@@ -103,27 +123,7 @@ class Snurr:
         if not end.endswith("\n"):
             self._current_symbol = None  # Resets spinner position
 
-    # Context manager methods
-    def __enter__(self) -> "Snurr":
-        """Enter the context manager, starting the spinner."""
-        self.start()
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: object | None,
-    ) -> None:
-        """Exit the context manager, stopping the spinner."""
-        if exc_type is KeyboardInterrupt:
-            self._terminal.erase(2)  # remove ^C
-            self.stop()
-            print("^C", end="")  # print ^C again
-        else:
-            self.stop()
-
-    # Private helper methods
+    # Private helper methods - Text processing
     def _split_graphemes(self, text: str) -> list[str]:
         """Split a string into an array of grapheme clusters using regex."""
         return regex.findall(r"\X", text)
@@ -132,6 +132,7 @@ class Snurr:
         """Calculate the display width of a symbol in terminal columns."""
         return sum(wcwidth.wcwidth(char) for char in symbol)
 
+    # Private helper methods - Spinner animation
     def _spin(self) -> None:
         """Main spinner animation loop."""
         symbols = itertools.cycle(self.symbols)
