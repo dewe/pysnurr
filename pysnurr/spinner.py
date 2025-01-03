@@ -106,11 +106,8 @@ class Snurr:
         self.busy = False
         if self._spinner_thread:
             self._spinner_thread.join()
-            self._erase_current_symbol()
-            self._current_symbol = None
+            self._clear_current_symbol()
             self._terminal.show_cursor()
-
-    # TODO: replace write with status, and add a status property
 
     def write(self, text: str, end: str = "\n") -> None:
         """Write text to stdout while spinner is active.
@@ -118,10 +115,8 @@ class Snurr:
         Thread-safe method to write text while the spinner is running.
         The spinner will be temporarily cleared before writing.
         """
-        self._erase_current_symbol()
+        self._clear_current_symbol()
         self._terminal.write(text + end)
-        if not end.endswith("\n"):
-            self._current_symbol = None  # Resets spinner position
 
     # Private helper methods - Text processing
     def _split_graphemes(self, text: str) -> list[str]:
@@ -142,18 +137,20 @@ class Snurr:
 
     def _update_symbol(self, new_symbol: str) -> None:
         """Update the displayed spinner symbol."""
-        self._move_left_current_symbol()
         self._current_symbol = new_symbol
         self._terminal.write(new_symbol)
+        self._move_left_current_symbol()
 
-    def _erase_current_symbol(self) -> None:
+    def _clear_current_symbol(self) -> None:
         """Erase the current spinner symbol from the terminal."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
+            self._terminal.move_cursor_right(width)
             self._terminal.erase(width)
+            self._current_symbol = None
 
     def _move_left_current_symbol(self) -> None:
         """Move the cursor to the left of current spinner symbol."""
         if self._current_symbol:
             width = self._get_symbol_width(self._current_symbol)
-            self._terminal.write(f"\033[{width}D")
+            self._terminal.move_cursor_left(width)
