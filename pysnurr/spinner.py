@@ -127,19 +127,14 @@ class Snurr:
         return regex.findall(r"\X", text)
 
     def _get_symbol_width(self, symbol: str) -> int:
-        """Simplified calculation of the display width of a symbol."""
-        width = 0
-        for char in symbol:
-            char_width = wcwidth.wcwidth(char)
-            width += char_width
-        return width
+        """Calculate the display width of a symbol in terminal columns."""
+        return sum(wcwidth.wcwidth(char) for char in symbol)
 
     def _spin(self) -> None:
         """Main spinner animation loop."""
-        for symbol in itertools.cycle(self.symbols):
-            if not self.busy:
-                break
-            self._update_symbol(symbol)
+        symbols = itertools.cycle(self.symbols)
+        while self.busy:
+            self._update_symbol(next(symbols))
             time.sleep(self.delay)
 
     def _update_symbol(self, new_symbol: str) -> None:
