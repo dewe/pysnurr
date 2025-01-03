@@ -29,10 +29,10 @@ time.sleep(2)  # Do some work
 spinner.stop()
 
 # Choose from various spinner styles
-spinner = Snurr(symbols=SPINNERS["CLASSIC"])  # /-\|
-spinner = Snurr(symbols=SPINNERS["EARTH"])    # 🌍🌎🌏
-spinner = Snurr(symbols=SPINNERS["HEARTS"])   # 💛💙💜💚
-spinner = Snurr(symbols=SPINNERS["MOON"])     # 🌑🌒🌓🌔🌕🌖🌗🌘
+spinner = Snurr(frames=SPINNERS["CLASSIC"])  # /-\|
+spinner = Snurr(frames=SPINNERS["EARTH"])    # 🌍🌎🌏
+spinner = Snurr(frames=SPINNERS["HEARTS"])   # 💛💙💜💚
+spinner = Snurr(frames=SPINNERS["MOON"])     # 🌑🌒🌓🌔🌕🌖🌗🌘
 ...
 
 # Show spinner at end of line
@@ -48,7 +48,7 @@ with Snurr(status="Starting up...") as spinner:
     time.sleep(1)
 
 # Update status message during spinning
-with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
+with Snurr(frames=SPINNERS["EARTH"]) as spinner:
     spinner.status = "Starting a long process..."
     time.sleep(1)
     spinner.status = "Step 1: Data processing"

@@ -27,6 +27,10 @@ class TerminalWriter:
         """Erase 'width' characters using backspace sequence."""
         self.write("\b" * width + " " * width + "\b" * width)
 
+    def erase_to_end(self) -> None:
+        """Erase from cursor position to end of line."""
+        self.write("\033[0K")
+
     def move_cursor_left(self, columns: int) -> None:
         """Move cursor left by specified number of columns."""
         if columns > 0:

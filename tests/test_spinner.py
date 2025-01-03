@@ -65,9 +65,9 @@ class TestSpinnerInitialization:
 
     def test_custom_initialization(self):
         """Verify spinner initializes with custom settings."""
-        custom_symbols = "↑↓"
+        custom_frames = "↑↓"
         custom_delay = 0.002
-        spinner = Snurr(delay=custom_delay, symbols=custom_symbols)
+        spinner = Snurr(delay=custom_delay, frames=custom_frames)
         output = StringIO()
 
         with redirect_stdout(output):
@@ -75,8 +75,8 @@ class TestSpinnerInitialization:
             time.sleep(custom_delay * 2)  # Wait for at least one cycle
             spinner.stop()
 
-        # Verify custom symbols are used
-        assert any(symbol in output.getvalue() for symbol in custom_symbols)
+        # Verify custom frames are used
+        assert any(frame in output.getvalue() for frame in custom_frames)
 
     def test_initial_status(self):
         """Verify spinner can be initialized with a status message."""
@@ -104,19 +104,19 @@ class TestSpinnerInitialization:
         with pytest.raises(ValueError, match="delay must be non-negative"):
             Snurr(delay=-1)
 
-    def test_raises_on_invalid_symbols(self):
-        """Verify ValueError is raised for invalid symbol strings."""
-        with pytest.raises(ValueError, match="symbols cannot be empty"):
-            Snurr(symbols="")
+    def test_raises_on_invalid_frames(self):
+        """Verify ValueError is raised for invalid frame strings."""
+        with pytest.raises(ValueError, match="frames cannot be empty"):
+            Snurr(frames="")
 
-        with pytest.raises(ValueError, match="symbols string too long"):
-            Snurr(symbols="x" * 101)  # Exceeds max length
+        with pytest.raises(ValueError, match="frames string too long"):
+            Snurr(frames="x" * 101)  # Exceeds max length
 
 
 class TestSpinnerBehavior:
     def test_start_stop(self):
         """Test starting and stopping behavior"""
-        spinner = Snurr(symbols="X")  # Single char for simpler testing
+        spinner = Snurr(frames="X")  # Single char for simpler testing
         output = StringIO()
 
         with redirect_stdout(output):
@@ -132,8 +132,8 @@ class TestSpinnerBehavior:
             assert not final_output.endswith("X")  # Spinner cleaned up
 
     def test_spinner_animation(self):
-        """Test that spinner animates through its symbols"""
-        spinner = Snurr(delay=0.001, symbols="AB")  # Two distinct chars
+        """Test that spinner animates through its frames"""
+        spinner = Snurr(delay=0.001, frames="AB")  # Two distinct chars
         output = StringIO()
 
         with redirect_stdout(output):
@@ -142,7 +142,7 @@ class TestSpinnerBehavior:
             spinner.stop()
 
         captured = output.getvalue()
-        # Verify both symbols appeared
+        # Verify both frames appeared
         assert "A" in captured and "B" in captured
 
 
@@ -150,7 +150,7 @@ class TestSpinnerDisplay:
     def test_wide_character_display(self):
         """Test handling of wide (emoji) characters"""
         test_emoji = "🌍"
-        spinner = Snurr(delay=0.001, symbols=test_emoji)
+        spinner = Snurr(delay=0.001, frames=test_emoji)
         output = StringIO()
 
         with redirect_stdout(output):
@@ -165,7 +165,7 @@ class TestSpinnerDisplay:
 
     def test_spinner_at_end_of_line(self):
         """Test spinner appears at end of line"""
-        spinner = Snurr(delay=0.001, symbols="_")
+        spinner = Snurr(delay=0.001, frames="_")
         output = StringIO()
 
         with redirect_stdout(output):
@@ -184,8 +184,8 @@ class TestSpinnerDisplay:
         assert regex.match(r"Text(_*)More", cleaned)
 
     def test_spinner_at_end_of_line_wide_chars(self):
-        """Test spinner appears at end of line with emoji symbols"""
-        spinner = Snurr(delay=0.001, symbols="⭐️")
+        """Test spinner appears at end of line with emoji frames"""
+        spinner = Snurr(delay=0.001, frames="⭐️")
         output = StringIO()
 
         with redirect_stdout(output):
@@ -208,7 +208,7 @@ class TestSpinnerOutput:
 
     def test_status_during_spinning(self):
         """Test that status works correctly while spinner is running"""
-        spinner = Snurr(delay=0.001, symbols="_")
+        spinner = Snurr(delay=0.001, frames="_")
         output = StringIO()
 
         with redirect_stdout(output):
@@ -231,7 +231,7 @@ class TestSpinnerOutput:
 
     def test_status_updates(self):
         """Test that status updates work correctly"""
-        spinner = Snurr(symbols="_", delay=0.001)
+        spinner = Snurr(frames="_", delay=0.001)
         output = StringIO()
 
         with redirect_stdout(output):
@@ -286,7 +286,7 @@ class TestSpinnerOutput:
 
     def test_status_position(self):
         """Test that status appears before the spinner."""
-        spinner = Snurr(delay=0.001, symbols="_")  # Simple symbol for testing
+        spinner = Snurr(delay=0.001, frames="_")  # Simple frame for testing
         output = StringIO()
 
         with redirect_stdout(output):
@@ -297,18 +297,16 @@ class TestSpinnerOutput:
 
         # Clean up output for verification
         output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output_value)
 
-        # Verify status appears before spinner
-        assert "Working" in cleaned
-        assert cleaned.find("Working") < cleaned.find("_")
+        # Verify last status appears before last spinner
+        assert cleaned.rindex("Working") < cleaned.rindex("_")
 
 
 class TestErrorHandling:
     def test_keyboard_interrupt_handling(self):
         """Verify spinner cleans up properly when interrupted."""
-        spinner = Snurr(symbols="_", delay=0.001)
+        spinner = Snurr(frames="_", delay=0.001)
         output = StringIO()
 
         with redirect_stdout(output):
@@ -321,8 +319,8 @@ class TestErrorHandling:
                 pass  # Expected
 
         # Verify cleanup state
-        assert not spinner.busy
-        assert spinner._current_symbol is None
+        assert not spinner._busy
+        assert spinner._buffer == ""
 
         # Check thread is cleaned up
         has_thread = spinner._spinner_thread is not None

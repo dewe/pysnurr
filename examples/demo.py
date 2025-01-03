@@ -12,6 +12,8 @@ def demo_basic() -> None:
         spinner.status = "Working..."
         sleep(2)  # Simulate work
 
+    # TODO: Add a demo for busy=False and busy=True
+
     print("\nTraditional usage:")
     spinner = Snurr()
     spinner.start()
@@ -27,7 +29,7 @@ def demo_styles() -> None:
     for name, style in SPINNERS.items():
         style_name = f"{name} (default)" if name == "CLASSIC" else name
         print(f"\nStyle: {style_name}")
-        with Snurr(symbols=style):
+        with Snurr(frames=style):
             sleep(2)
 
 
@@ -36,7 +38,7 @@ def demo_status_updates() -> None:
     print("\n=== Status Updates ===")
 
     print("\nUpdating status while spinning:")
-    with Snurr(symbols=SPINNERS["EARTH"]) as spinner:
+    with Snurr(frames=SPINNERS["EARTH"]) as spinner:
         spinner.status = "Starting up..."
         sleep(1)
         spinner.status = "Processing files..."
@@ -50,9 +52,23 @@ def demo_status_updates() -> None:
 def demo_custom() -> None:
     """Demo custom spinner configuration"""
     print("\n=== Custom Spinner ===")
-    print("Custom symbols and slower speed:")
-    with Snurr(symbols="◉◎", delay=0.5):
+
+    print("\nCustom frames and slower speed:")
+    with Snurr(frames="◉◎", delay=0.5):
         sleep(3)
+
+    print("\nStatus text with emojis:")
+    with Snurr(frames=SPINNERS["SPARKLES"]) as spinner:
+        sleep(2)
+        spinner.status = "🚀 Launching..."
+        sleep(2)
+
+    print("\nSpinner at end of text: ", end="")
+    with Snurr(frames=SPINNERS["HEARTS"]) as spinner:
+        sleep(2)
+        spinner.status = "Here -->"
+        sleep(2)
+    print()
 
 
 if __name__ == "__main__":

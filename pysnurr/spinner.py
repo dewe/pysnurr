@@ -46,34 +46,34 @@ class Snurr:
     def __init__(
         self,
         delay: float = 0.1,
-        symbols: str = SPINNERS["CLASSIC"],
+        frames: str = SPINNERS["CLASSIC"],
         status: str = "",
     ) -> None:
         """Initialize the spinner.
 
         Args:
             delay: Time between spinner updates in seconds
-            symbols: String containing spinner animation frames
+            frames: String containing spinner animation frames
             status: Initial status message to display
 
         Raises:
-            ValueError: If delay is negative or symbols is empty/too long
+            ValueError: If delay is negative or frames is empty/too long
         """
         if delay < 0:
             raise ValueError("delay must be non-negative")
 
-        if not symbols:
-            raise ValueError("symbols cannot be empty")
-        if len(symbols) > 100:
-            raise ValueError("symbols string too long (max 100 characters)")
+        if not frames:
+            raise ValueError("frames cannot be empty")
+        if len(frames) > 100:
+            raise ValueError("frames string too long (max 100 characters)")
 
-        self.symbols: list[str] = self._split_graphemes(symbols)
+        self.frames: list[str] = split_graphemes(frames)
         self.delay: float = delay
-        self.busy: bool = False
+        self._busy: bool = False
         self._spinner_thread: threading.Thread | None = None
-        self._current_symbol: str | None = None
-        self._terminal: TerminalWriter = TerminalWriter()
+        self._buffer: str = ""
         self._status: str = status
+        self._terminal: TerminalWriter = TerminalWriter()
 
     # Context manager methods
     def __enter__(self) -> "Snurr":
@@ -88,17 +88,12 @@ class Snurr:
         exc_tb: object | None,
     ) -> None:
         """Exit the context manager, stopping the spinner."""
-        if exc_type is KeyboardInterrupt:
-            self._terminal.erase(2)  # remove ^C
-            self.stop()
-            print("^C", end="")  # print ^C again
-        else:
-            self.stop()
+        self.stop()
 
     # Public interface methods
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
-        self.busy = True
+        self._busy = True
         self._terminal.hide_cursor()
         self._spinner_thread = threading.Thread(target=self._spin)
         self._spinner_thread.daemon = True
@@ -106,10 +101,10 @@ class Snurr:
 
     def stop(self) -> None:
         """Stop the spinner animation and restore cursor."""
-        self.busy = False
+        self._busy = False
         if self._spinner_thread:
             self._spinner_thread.join()
-            self._clear_current_symbol()
+            self._clear()
             self._terminal.show_cursor()
 
     @property
@@ -118,66 +113,80 @@ class Snurr:
         return self._status
 
     @status.setter
-    def status(self, value: str) -> None:
-        """Set a new status message.
-
-        The status will be displayed next to the spinner and can be
-        updated while the spinner is running.
-
-        Args:
-            value: The status message to display
-        """
-        self._clear_current_line()
-        self._status = value
-        if self._current_symbol:
-            self._update_symbol(self._current_symbol)
-
-    # Private helper methods - Text processing
-    def _split_graphemes(self, text: str) -> list[str]:
-        """Split a string into an array of grapheme clusters using regex."""
-        return regex.findall(r"\X", text)
-
-    def _get_symbol_width(self, symbol: str) -> int:
-        """Calculate the display width of a symbol in terminal columns."""
-        return sum(wcwidth.wcwidth(char) for char in symbol)
+    def status(self, message: str) -> None:
+        """Set a new status message."""
+        self._clear()
+        self._status = message
+        if self._busy:  # Only update if spinner is running
+            self._update(self.frames[0])  # Use first frame as placeholder
 
     # Private helper methods - Spinner animation
     def _spin(self) -> None:
         """Main spinner animation loop."""
-        symbols = itertools.cycle(self.symbols)
-        while self.busy:
-            self._update_symbol(next(symbols))
+        frames = itertools.cycle(self.frames)
+        while self._busy:
+            self._update(next(frames))
             time.sleep(self.delay)
 
-    def _clear_current_line(self) -> None:
-        """Clear the current line containing spinner and status."""
-        if self._current_symbol:
-            symbol_width = self._get_symbol_width(self._current_symbol)
-            width = symbol_width + len(self._status)
-            if self._status:
-                width += 1  # Add space between status and spinner
-            self._terminal.move_cursor_right(width)
-            self._terminal.erase(width)
-            self._current_symbol = None
+    def _update(self, new_frame: str) -> None:
+        """Update the buffer with new frame and status."""
+        message = f"{self._status} " if self._status else ""
 
-    def _clear_current_symbol(self) -> None:
-        """Erase the current spinner symbol and status from the terminal."""
-        self._clear_current_line()
+        self._buffer = f"{message}{new_frame}"
+        self._render()
 
-    def _update_symbol(self, new_symbol: str) -> None:
-        """Update the displayed spinner symbol and status."""
-        self._current_symbol = new_symbol
-        display = ""
-        if self._status:
-            display = self._status + " "  # Space after status
-        display += new_symbol
-        self._terminal.write(display)
-        self._move_left_current_line()
+    def _render(self) -> None:
+        """Render the current buffer to the terminal."""
+        width = get_columns(self._buffer)
 
-    def _move_left_current_line(self) -> None:
-        """Move the cursor to the left of current line."""
-        if self._current_symbol:
-            width = self._get_symbol_width(self._current_symbol)
-            if self._status:
-                width += len(self._status) + 1  # +1 for the space
-            self._terminal.move_cursor_left(width)
+        self._terminal.write(self._buffer)
+        self._terminal.move_cursor_left(width)
+
+    def _clear(self) -> None:
+        """Clear from current location to end of line."""
+        self._buffer = ""
+        self._terminal.erase_to_end()
+
+
+def split_graphemes(text: str) -> list[str]:
+    """Split Unicode text into grapheme clusters.
+
+    A grapheme cluster represents what a user would consider a single
+    character, which may consist of multiple Unicode code points (e.g. emojis,
+    combining marks).
+
+    Args:
+        text: The input string to split into grapheme clusters.
+
+    Returns:
+        A list of strings, where each string is a single grapheme cluster.
+
+    Example:
+        >>> split_graphemes("👨‍👩‍👧")
+        ['👨‍👩‍👧']  # Family emoji is a single grapheme
+        >>> split_graphemes("é")
+        ['é']  # Accented e is a single grapheme
+    """
+    return regex.findall(r"\X", text)
+
+
+def get_columns(frame: str) -> int:
+    """Calculate the display width of text in terminal columns.
+
+    Handles wide characters (like CJK) and emoji that may occupy multiple
+    columns in terminal output. Uses wcwidth to determine the display width
+    of each character.
+
+    Args:
+        frame: The text string to measure.
+
+    Returns:
+        The number of terminal columns needed to display the text.
+
+    Example:
+        >>> get_columns("abc")
+        3  # Regular ASCII characters are 1 column each
+        >>> get_columns("你好")
+        4  # CJK characters are typically 2 columns each
+    """
+    return sum(wcwidth.wcwidth(char) for char in frame)
