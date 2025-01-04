@@ -7,6 +7,8 @@ for command-line applications.
 import sys
 import threading
 
+import wcwidth  # type: ignore
+
 
 class TerminalWriter:
     """Handles terminal output operations with thread safety."""
@@ -17,15 +19,15 @@ class TerminalWriter:
     def __init__(self) -> None:
         self._screen_lock: threading.Lock = threading.Lock()
 
+    def get_columns(self, text: str) -> int:
+        """Calculate the display width of text in terminal columns."""
+        return sum(wcwidth.wcwidth(char) for char in text)
+
     def write(self, text: str) -> None:
         """Write text to terminal with thread safety."""
         with self._screen_lock:
             sys.stdout.write(text)
             sys.stdout.flush()
-
-    def erase(self, width: int) -> None:
-        """Erase 'width' characters using backspace sequence."""
-        self.write("\b" * width + " " * width + "\b" * width)
 
     def erase_to_end(self) -> None:
         """Erase from cursor position to end of line."""

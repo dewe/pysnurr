@@ -9,7 +9,6 @@ import threading
 import time
 
 import regex
-import wcwidth  # type: ignore
 
 from .terminal import TerminalWriter
 
@@ -137,7 +136,7 @@ class Snurr:
 
     def _render(self) -> None:
         """Render the current buffer to the terminal."""
-        width = get_columns(self._buffer)
+        width = self._terminal.get_columns(self._buffer)
 
         self._terminal.write(self._buffer)
         self._terminal.move_cursor_left(width)
@@ -168,25 +167,3 @@ def split_graphemes(text: str) -> list[str]:
         ['é']  # Accented e is a single grapheme
     """
     return regex.findall(r"\X", text)
-
-
-def get_columns(frame: str) -> int:
-    """Calculate the display width of text in terminal columns.
-
-    Handles wide characters (like CJK) and emoji that may occupy multiple
-    columns in terminal output. Uses wcwidth to determine the display width
-    of each character.
-
-    Args:
-        frame: The text string to measure.
-
-    Returns:
-        The number of terminal columns needed to display the text.
-
-    Example:
-        >>> get_columns("abc")
-        3  # Regular ASCII characters are 1 column each
-        >>> get_columns("你好")
-        4  # CJK characters are typically 2 columns each
-    """
-    return sum(wcwidth.wcwidth(char) for char in frame)
