@@ -4,6 +4,7 @@ This module provides thread-safe terminal output operations
 for command-line applications.
 """
 
+import os
 import sys
 import threading
 
@@ -20,7 +21,22 @@ class TerminalWriter:
         self._screen_lock: threading.Lock = threading.Lock()
 
     def get_columns(self, text: str) -> int:
-        """Calculate the display width of text in terminal columns."""
+        """Calculate the display width of text in terminal columns.
+
+        Args:
+            text: The text to calculate width for.
+
+        Returns:
+            The width in columns that the text will occupy in the terminal.
+
+        Example:
+            >>> from pysnurr.terminal import TerminalWriter
+            >>> writer = TerminalWriter()
+            >>> writer.get_columns("hello")
+            5
+            >>> writer.get_columns("你好")  # wide characters
+            4
+        """
         return sum(wcwidth.wcwidth(char) for char in text)
 
     def write(self, text: str) -> None:
@@ -50,3 +66,66 @@ class TerminalWriter:
     def show_cursor(self) -> None:
         """Show the terminal cursor."""
         self.write(self.SHOW_CURSOR)
+
+    def get_cursor_position(self) -> tuple[int, int]:
+        """Get the current cursor position.
+
+        Returns:
+            tuple[int, int]: A tuple of (row, column), both 1-based.
+        """
+        import termios
+        import tty
+
+        with self._screen_lock:
+            # Save terminal settings
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+
+            try:
+                # Set terminal to raw mode
+                tty.setraw(sys.stdin.fileno())
+
+                # Query cursor position
+                sys.stdout.write("\x1b[6n")
+                sys.stdout.flush()
+
+                # Read response
+                response = ""
+                while True:
+                    char = sys.stdin.read(1)
+                    response += char
+                    if char == "R":
+                        break
+
+                # Parse response (format is "\x1b[{row};{column}R")
+                if response.startswith("\x1b[") and response.endswith("R"):
+                    parts = response[2:-1].split(";")
+                    if len(parts) == 2:
+                        return (int(parts[0]), int(parts[1]))
+
+                raise RuntimeError("Failed to get cursor position")
+
+            finally:
+                # Restore terminal settings
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    def get_screen_width(self) -> int:
+        """Get the current terminal width in columns.
+
+        Returns:
+            int: The number of columns in the terminal.
+
+        Example:
+            >>> from pysnurr.terminal import TerminalWriter
+            >>> writer = TerminalWriter()
+            >>> width = writer.get_screen_width()
+            >>> isinstance(width, int)
+            True
+            >>> width > 0
+            True
+        """
+        try:
+            return os.get_terminal_size().columns
+        except OSError:
+            # Fallback if terminal size cannot be determined
+            return 80

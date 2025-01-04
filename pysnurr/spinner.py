@@ -36,10 +36,10 @@ class Snurr:
     used either as a context manager or manually started and stopped.
 
     Example:
-        >>> with Snurr() as spinner:
+        >>> with Snurr() as spinner:  # doctest: +SKIP
         ...     # Do some work
-        ...     spinner.write("Processing...")
-        ...     time.sleep(2)
+        ...     spinner.status = "Processing..."
+        ...     time.sleep(0.1)  # Spinner will be visible here
     """
 
     def __init__(
@@ -148,22 +148,16 @@ class Snurr:
 
 
 def split_graphemes(text: str) -> list[str]:
-    """Split Unicode text into grapheme clusters.
-
-    A grapheme cluster represents what a user would consider a single
-    character, which may consist of multiple Unicode code points (e.g. emojis,
-    combining marks).
+    """Split text into grapheme clusters.
 
     Args:
-        text: The input string to split into grapheme clusters.
+        text: The text to split into grapheme clusters.
 
     Returns:
-        A list of strings, where each string is a single grapheme cluster.
+        A list of grapheme clusters.
 
     Example:
-        >>> split_graphemes("👨‍👩‍👧")
-        ['👨‍👩‍👧']  # Family emoji is a single grapheme
-        >>> split_graphemes("é")
-        ['é']  # Accented e is a single grapheme
+        >>> split_graphemes("é⭐️🇸🇪")
+        ['é', '⭐️', '🇸🇪']
     """
     return regex.findall(r"\X", text)
