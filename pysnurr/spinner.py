@@ -92,6 +92,7 @@ class Snurr:
     # Public interface methods
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
+        self._max_available_width = self._calculate_max_width()
         self._busy = True
         self._terminal.hide_cursor()
         self._spinner_thread = threading.Thread(target=self._spin)
@@ -129,22 +130,54 @@ class Snurr:
 
     def _update(self, new_frame: str) -> None:
         """Update the buffer with new frame and status."""
-        message = f"{self._status} " if self._status else ""
-
-        self._buffer = f"{message}{new_frame}"
+        new_buffer = self._truncate(self._status, new_frame)
+        self._buffer = new_buffer
         self._render()
+
+    def _truncate(self, message: str, frame: str) -> str:
+        """Truncate message if it would exceed available width."""
+        new_buffer = self._format(message, frame)
+        new_width = self._terminal.columns_width(new_buffer)
+
+        if new_width <= self._max_available_width:
+            return new_buffer
+
+        msg_graphemes = split_graphemes(message)
+        # Try progressively shorter messages until we find one that fits
+        for i in range(len(msg_graphemes) - 1, -1, -1):
+            truncated_msg = "".join(msg_graphemes[:i])
+            new_buffer = self._format(truncated_msg, frame)
+            new_width = self._terminal.columns_width(new_buffer)
+            if new_width <= self._max_available_width:
+                return new_buffer
+
+        return frame  # Return just the frame if even empty message is too long
+
+    def _format(self, message: str, frame: str) -> str:
+        """Format message and frame."""
+        if message:
+            return f"{message} {frame}"
+        return frame
 
     def _render(self) -> None:
         """Render the current buffer to the terminal."""
-        width = self._terminal.get_columns(self._buffer)
+        width = self._terminal.columns_width(self._buffer)
 
         self._terminal.write(self._buffer)
+
+        # TODO: jump back to start position instead of moving cursor left
         self._terminal.move_cursor_left(width)
 
     def _clear(self) -> None:
-        """Clear from current location to end of line."""
+        """Clear from current position to end of line."""
         self._buffer = ""
         self._terminal.erase_to_end()
+
+    def _calculate_max_width(self) -> int:
+        """Calculate maximum available width from current position to end of line."""
+        _, col = self._terminal.get_cursor_position()
+        screen_width = self._terminal.get_screen_width()
+        return max(0, screen_width - col)
 
 
 def split_graphemes(text: str) -> list[str]:

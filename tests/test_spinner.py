@@ -4,24 +4,30 @@ from io import StringIO
 
 import pytest
 import regex
+import wcwidth
 
 from pysnurr import Snurr
 
 
+@pytest.fixture
+def mock_terminal(monkeypatch):
+    """Fixture that allows configuration of terminal operations with defaults."""
+
+    def set_terminal_mocks(x=1, y=1, width=80):
+        monkeypatch.setattr(
+            "pysnurr.terminal.TerminalWriter.get_cursor_position", lambda self: (x, y)
+        )
+        monkeypatch.setattr(
+            "pysnurr.terminal.TerminalWriter.get_screen_width", lambda self: width
+        )
+
+    # Set default mocks
+    set_terminal_mocks()
+
+    return set_terminal_mocks
+
+
 class TestUtils:
-    @staticmethod
-    def simulate_backspaces(text: str) -> str:
-        """Simulate the effect of backspace characters in a terminal."""
-        visible_chars = []
-
-        for char in text:
-            if char == "\b":
-                if visible_chars:
-                    visible_chars.pop()
-            else:
-                visible_chars.append(char)
-
-        return "".join(visible_chars)
 
     @staticmethod
     def clean_escape_sequences(text: str) -> str:
@@ -50,7 +56,7 @@ class TestUtils:
 
 
 class TestSpinnerInitialization:
-    def test_default_initialization(self):
+    def test_default_initialization(self, mock_terminal):
         """Verify spinner initializes with default settings."""
         spinner = Snurr()
         output = StringIO()
@@ -63,7 +69,7 @@ class TestSpinnerInitialization:
         # Verify default spinner produces output
         assert len(output.getvalue()) > 0
 
-    def test_custom_initialization(self):
+    def test_custom_initialization(self, mock_terminal):
         """Verify spinner initializes with custom settings."""
         custom_frames = "↑↓"
         custom_delay = 0.002
@@ -78,7 +84,7 @@ class TestSpinnerInitialization:
         # Verify custom frames are used
         assert any(frame in output.getvalue() for frame in custom_frames)
 
-    def test_initial_status(self):
+    def test_initial_status(self, mock_terminal):
         """Verify spinner can be initialized with a status message."""
         initial_status = "Initial status"
 
@@ -92,9 +98,7 @@ class TestSpinnerInitialization:
             spinner.stop()
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify initial status appears in output
         assert initial_status in cleaned
@@ -114,7 +118,7 @@ class TestSpinnerInitialization:
 
 
 class TestSpinnerBehavior:
-    def test_start_stop(self):
+    def test_start_stop(self, mock_terminal):
         """Test starting and stopping behavior"""
         spinner = Snurr(frames="X")  # Single char for simpler testing
         output = StringIO()
@@ -131,7 +135,7 @@ class TestSpinnerBehavior:
             final_output = output.getvalue()
             assert not final_output.endswith("X")  # Spinner cleaned up
 
-    def test_spinner_animation(self):
+    def test_spinner_animation(self, mock_terminal):
         """Test that spinner animates through its frames"""
         spinner = Snurr(delay=0.001, frames="AB")  # Two distinct chars
         output = StringIO()
@@ -141,13 +145,12 @@ class TestSpinnerBehavior:
             time.sleep(0.005)  # Allow for multiple cycles
             spinner.stop()
 
-        captured = output.getvalue()
         # Verify both frames appeared
-        assert "A" in captured and "B" in captured
+        assert "A" in output.getvalue() and "B" in output.getvalue()
 
 
 class TestSpinnerDisplay:
-    def test_wide_character_display(self):
+    def test_wide_character_display(self, mock_terminal):
         """Test handling of wide (emoji) characters"""
         test_emoji = "🌍"
         spinner = Snurr(delay=0.001, frames=test_emoji)
@@ -163,7 +166,7 @@ class TestSpinnerDisplay:
         assert test_emoji in output.getvalue()
         assert not lines[-1].endswith(test_emoji)
 
-    def test_spinner_at_end_of_line(self):
+    def test_spinner_at_end_of_line(self, mock_terminal):
         """Test spinner appears at end of line"""
         spinner = Snurr(delay=0.001, frames="_")
         output = StringIO()
@@ -176,14 +179,12 @@ class TestSpinnerDisplay:
             print("More", end="")  # Should be able to continue the line
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify output structure
         assert regex.match(r"Text(_*)More", cleaned)
 
-    def test_spinner_at_end_of_line_wide_chars(self):
+    def test_spinner_at_end_of_line_wide_chars(self, mock_terminal):
         """Test spinner appears at end of line with emoji frames"""
         spinner = Snurr(delay=0.001, frames="⭐️")
         output = StringIO()
@@ -196,17 +197,37 @@ class TestSpinnerDisplay:
             print("More", end="")  # Should be able to continue the line
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify output structure
         assert regex.match(r"Text(\X*)More", cleaned)
 
+    def test_respects_terminal_width(self, mock_terminal):
+        """Test that spinner output respects terminal width limits."""
+        mock_terminal(width=20)  # Set narrow terminal width
+        spinner = Snurr(frames="⭐️", status="This 💬 will exceed terminal 🖥️ width")
+        output = StringIO()
+
+        with redirect_stdout(output):
+            spinner.start()
+            spinner.stop()
+
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
+        last_line = cleaned.splitlines()[-1]
+        output_length = sum(wcwidth.wcwidth(char) for char in last_line)
+
+        # Verify the output respects terminal width
+        assert output_length <= 20
+
+        # Verify the spinner frame is at the end of the line
+        assert last_line.endswith("⭐️")
+
+
+# TODO: test when col position is greater than terminal width
+
 
 class TestSpinnerOutput:
-
-    def test_status_during_spinning(self):
+    def test_status_during_spinning(self, mock_terminal):
         """Test that status works correctly while spinner is running"""
         spinner = Snurr(delay=0.001, frames="_")
         output = StringIO()
@@ -221,15 +242,13 @@ class TestSpinnerOutput:
             spinner.stop()
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify output contains status messages
         assert "Hello" in cleaned
         assert "World" in cleaned
 
-    def test_status_updates(self):
+    def test_status_updates(self, mock_terminal):
         """Test that status updates work correctly"""
         spinner = Snurr(frames="_", delay=0.001)
         output = StringIO()
@@ -248,9 +267,7 @@ class TestSpinnerOutput:
             spinner.stop()
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify all status messages appear
         assert "First" in cleaned
@@ -268,7 +285,7 @@ class TestSpinnerOutput:
         spinner.status = "Done!"
         assert spinner.status == "Done!"
 
-    def test_status_updates_while_running(self):
+    def test_status_updates_while_running(self, mock_terminal):
         """Test that status can be updated while spinner is running."""
         spinner = Snurr(delay=0.01)
 
@@ -284,7 +301,7 @@ class TestSpinnerOutput:
         finally:
             spinner.stop()
 
-    def test_status_position(self):
+    def test_status_position(self, mock_terminal):
         """Test that status appears before the spinner."""
         spinner = Snurr(delay=0.001, frames="_")  # Simple frame for testing
         output = StringIO()
@@ -296,15 +313,14 @@ class TestSpinnerOutput:
             spinner.stop()
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        cleaned = TestUtils.clean_escape_sequences(output_value)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify last status appears before last spinner
         assert cleaned.rindex("Working") < cleaned.rindex("_")
 
 
 class TestErrorHandling:
-    def test_keyboard_interrupt_handling(self):
+    def test_keyboard_interrupt_handling(self, mock_terminal):
         """Verify spinner cleans up properly when interrupted."""
         spinner = Snurr(frames="_", delay=0.001)
         output = StringIO()
@@ -317,7 +333,6 @@ class TestErrorHandling:
                     TestUtils.simulate_ctrl_c()
             except KeyboardInterrupt:
                 pass  # Expected
-
         # Verify cleanup state
         assert not spinner._busy
         assert spinner._buffer == ""
@@ -328,9 +343,7 @@ class TestErrorHandling:
         assert not is_alive
 
         # Clean up output for verification
-        output_value = output.getvalue()
-        output_no_escapes = TestUtils.clean_escape_sequences(output_value)
-        cleaned = TestUtils.simulate_backspaces(output_no_escapes)
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
 
         # Verify final output ends with ^C
         assert "Text" in cleaned

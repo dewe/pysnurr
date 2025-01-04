@@ -20,7 +20,7 @@ class TerminalWriter:
     def __init__(self) -> None:
         self._screen_lock: threading.Lock = threading.Lock()
 
-    def get_columns(self, text: str) -> int:
+    def columns_width(self, text: str) -> int:
         """Calculate the display width of text in terminal columns.
 
         Args:
@@ -32,9 +32,9 @@ class TerminalWriter:
         Example:
             >>> from pysnurr.terminal import TerminalWriter
             >>> writer = TerminalWriter()
-            >>> writer.get_columns("hello")
+            >>> writer.columns_width("hello")
             5
-            >>> writer.get_columns("你好")  # wide characters
+            >>> writer.columns_width("你好")  # wide characters
             4
         """
         return sum(wcwidth.wcwidth(char) for char in text)

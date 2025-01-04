@@ -44,9 +44,15 @@ def demo_status_updates() -> None:
         spinner.status = "Processing files..."
         sleep(1.5)
         spinner.status = "Analyzing data..."
-        sleep(1)
+        sleep(1.5)
         spinner.status = "Finishing up..."
-        sleep(0.5)
+        sleep(2)
+
+    print("\nStatus text with emojis:")
+    with Snurr(frames=SPINNERS["SPARKLES"]) as spinner:
+        sleep(2)
+        spinner.status = "🚀 Launching..."
+        sleep(2)
 
 
 def demo_custom() -> None:
@@ -56,12 +62,6 @@ def demo_custom() -> None:
     print("\nCustom frames and slower speed:")
     with Snurr(frames="◉◎", delay=0.5):
         sleep(3)
-
-    print("\nStatus text with emojis:")
-    with Snurr(frames=SPINNERS["SPARKLES"]) as spinner:
-        sleep(2)
-        spinner.status = "🚀 Launching..."
-        sleep(2)
 
     print("\nSpinner at end of text: ", end="")
     with Snurr(frames=SPINNERS["HEARTS"]) as spinner:
