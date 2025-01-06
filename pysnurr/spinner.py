@@ -68,9 +68,10 @@ class Snurr:
 
         self.frames: list[str] = split_graphemes(frames)
         self.delay: float = delay
-        self._busy: bool = False
-        self._spinner_thread: threading.Thread | None = None
         self._buffer: str = ""
+        self._busy: bool = False
+        self._max_available_width: int = 80  # default width
+        self._spinner_thread: threading.Thread | None = None
         self._status: str = status
         self._terminal: TerminalWriter = TerminalWriter()
 
