@@ -12,8 +12,6 @@ def demo_basic() -> None:
         spinner.status = "Working..."
         sleep(2)  # Simulate work
 
-    # TODO: Add a demo for busy=False and busy=True
-
     print("\nTraditional usage:")
     spinner = Snurr()
     spinner.start()

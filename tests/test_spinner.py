@@ -223,9 +223,6 @@ class TestSpinnerDisplay:
         assert last_line.endswith("⭐️")
 
 
-# TODO: test when col position is greater than terminal width
-
-
 class TestSpinnerOutput:
     def test_status_during_spinning(self, mock_terminal):
         """Test that status works correctly while spinner is running"""
@@ -348,3 +345,24 @@ class TestErrorHandling:
         # Verify final output ends with ^C
         assert "Text" in cleaned
         assert cleaned.endswith("^C")
+
+    def test_cursor_beyond_terminal_width(self, mock_terminal):
+        """Test spinner behavior when cursor position exceeds terminal width."""
+        # Set terminal width to 20 and cursor position beyond it
+        mock_terminal(x=25, width=20)
+
+        spinner = Snurr(frames="_", status="Status")
+        output = StringIO()
+
+        with redirect_stdout(output):
+            spinner.start()
+            time.sleep(0.002)
+            spinner.stop()
+
+        # Clean up output for verification
+        cleaned = TestUtils.clean_escape_sequences(output.getvalue())
+        last_line = cleaned.splitlines()[-1] if cleaned.splitlines() else cleaned
+
+        # Verify the spinner wraps to the next line and respects terminal width
+        assert sum(wcwidth.wcwidth(char) for char in last_line) <= 20
+        assert "_" in last_line  # Spinner frame should be in output
