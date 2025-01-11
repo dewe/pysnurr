@@ -1,4 +1,4 @@
-# pysnurr
+# Terminal Spinner Library
 
 [![Tests](https://github.com/dewe/pysnurr/actions/workflows/tests.yml/badge.svg)](https://github.com/dewe/pysnurr/actions/workflows/tests.yml)
 
@@ -6,8 +6,12 @@ A beautiful terminal spinner library for Python. Provides non-blocking spinner a
 
 ## Installation
 
+Clone the repository and install locally:
+
 ```bash
-pip install pysnurr
+git clone https://github.com/dewe/pysnurr.git
+cd pysnurr
+make dev-install  # Installs package and test dependencies
 ```
 
 ## Usage
@@ -78,14 +82,6 @@ with Snurr(frames=SPINNERS["EARTH"]) as spinner:
 - Python 3.10+ support
 
 ## Development
-
-Clone the repository and install in development mode with all development dependencies:
-
-```bash
-git clone https://github.com/dewe/pysnurr.git
-cd pysnurr
-make dev-install  # Installs package and test dependencies
-```
 
 Run tests and checks:
 
