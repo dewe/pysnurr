@@ -49,11 +49,6 @@ class TerminalWriter:
         """Erase from cursor position to end of line."""
         self.write("\033[0K")
 
-    def move_cursor_left(self, columns: int) -> None:
-        """Move cursor left by specified number of columns."""
-        if columns > 0:
-            self.write(self.get_cursor_left_sequence(columns))
-
     def get_cursor_left_sequence(self, columns: int) -> str:
         """Get the escape sequence to move cursor left.
 
@@ -64,11 +59,6 @@ class TerminalWriter:
             The ANSI escape sequence for cursor movement
         """
         return f"\033[{columns}D" if columns > 0 else ""
-
-    def move_cursor_right(self, columns: int) -> None:
-        """Move cursor right by specified number of columns."""
-        if columns > 0:
-            self.write(f"\033[{columns}C")
 
     def hide_cursor(self) -> None:
         """Hide the terminal cursor."""
