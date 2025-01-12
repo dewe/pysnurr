@@ -7,7 +7,6 @@ to indicate progress or ongoing operations in command-line applications.
 import itertools
 import threading
 import time
-from dataclasses import dataclass, replace
 from typing import Iterator, Optional
 
 import regex
@@ -28,19 +27,6 @@ SPINNERS = {
     "TRIANGLES": "◢◣◤◥",  # Rotating triangles
     "WAVE": "⎺⎻⎼⎽⎼⎻",  # Wave pattern
 }
-
-
-@dataclass(frozen=True)
-class SpinnerState:
-    """Immutable state of a spinner.
-
-    This class represents the complete state of a spinner at any point in time.
-    Being frozen (immutable), any state change requires creating a new instance.
-    """
-
-    frame: str = ""
-    max_available_width: int = 80
-    status: str = ""
 
 
 class Snurr:
@@ -81,15 +67,15 @@ class Snurr:
         if len(frames) > 100:
             raise ValueError("frames string too long (max 100 characters)")
 
-        self.frames: list[str] = split_graphemes(frames)
-        self.delay: float = delay
-        self._terminal: TerminalWriter = TerminalWriter()
-        self._state = SpinnerState(status=status)
+        self.frames = split_graphemes(frames)
+        self.delay = delay
+        self._status = status
+        self._frame = self.frames[0]
+        self._terminal = TerminalWriter()
         self._stop_event = threading.Event()
         self._stop_event.set()  # Start in stopped state
         self._spinner_thread: Optional[threading.Thread] = None
 
-    # Context manager methods
     def __enter__(self) -> "Snurr":
         """Enter the context manager, starting the spinner."""
         self.start()
@@ -104,17 +90,10 @@ class Snurr:
         """Exit the context manager, stopping the spinner."""
         self.stop()
 
-    # Public interface methods
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
         if not self._stop_event.is_set():  # Already running
             return
-
-        self._state = replace(
-            self._state,
-            max_available_width=self._calculate_max_width(),
-            frame=self.frames[0],  # Set initial frame when starting
-        )
 
         self._stop_event.clear()
         self._terminal.hide_cursor()
@@ -136,25 +115,23 @@ class Snurr:
     @property
     def status(self) -> str:
         """Get the current status message."""
-        return self._state.status
+        return self._status
 
     @status.setter
     def status(self, message: str) -> None:
         """Set a new status message."""
         self._clear()
-        self._state = replace(self._state, status=message)
+        self._status = message
         if not self._stop_event.is_set():  # Only update if running
-            self._update_display(self._state)
+            self._update_display()
 
-    # Private helper methods - Spinner animation
     def _spin(self) -> None:
         """Main spinner animation loop."""
         frames = self._frame_iterator()
         while not self._stop_event.is_set():
             try:
-                frame = next(frames)
-                self._state = replace(self._state, frame=frame)
-                self._update_display(self._state)
+                self._frame = next(frames)
+                self._update_display()
                 time.sleep(self.delay)
             except Exception:
                 break
@@ -163,45 +140,61 @@ class Snurr:
         """Generate frames indefinitely."""
         return itertools.cycle(self.frames)
 
-    def _update_display(self, state: SpinnerState) -> None:
-        """Update the display with current state."""
-        content = self._truncate(state)
+    def _update_display(self) -> None:
+        """Update the display with current frame and status."""
+        content = self._format()
         width = self._terminal.columns_width(content)
+        max_width = self._get_max_width()
+
+        # Truncate if needed
+        if width > max_width:
+            content = self._truncate(content, max_width)
+            width = self._terminal.columns_width(content)
+
         buffer = content + self._terminal.get_cursor_left_sequence(width)
         self._terminal.write(buffer)
 
-    def _truncate(self, state: SpinnerState) -> str:
-        """Truncate message if it would exceed available width."""
-        buffer = self._format(state)
-        new_width = self._terminal.columns_width(buffer)
-
-        if new_width <= state.max_available_width:
-            return buffer
-
-        msg_graphemes = split_graphemes(state.status)
-        # Try progressively shorter messages until we find one that fits
-        for i in range(len(msg_graphemes) - 1, -1, -1):
-            truncated_msg = "".join(msg_graphemes[:i])
-            state = replace(state, status=truncated_msg)
-            buffer = self._format(state)
-            new_width = self._terminal.columns_width(buffer)
-            if new_width <= state.max_available_width:
-                return buffer
-
-        return state.frame  # Return just the frame if even empty message is too long
-
-    @staticmethod
-    def _format(state: SpinnerState) -> str:
+    def _format(self) -> str:
         """Format message and frame."""
-        if state.status:
-            return f"{state.status} {state.frame}"
-        return state.frame
+        return f"{self._status} {self._frame}" if self._status else self._frame
+
+    def _truncate(self, content: str, max_width: int) -> str:
+        """Truncate content to fit available width while preserving the spinner frame.
+
+        Ensures the spinner frame is always visible at the end of the line, even when
+        content needs to be truncated.
+        """
+        frame_width = self._terminal.columns_width(self._frame)
+
+        # If we can't even fit the frame, just return it
+        if frame_width >= max_width:
+            return self._frame
+
+        # Reserve space for frame and one space
+        available_width = max_width - frame_width - 1
+
+        # If we have a status, truncate it to fit
+        if self._status:
+            status_graphemes = split_graphemes(self._status)
+            result = []
+            width = 0
+
+            for g in status_graphemes:
+                g_width = self._terminal.columns_width(g)
+                if width + g_width > available_width:
+                    break
+                result.append(g)
+                width += g_width
+
+            return "".join(result) + " " + self._frame
+
+        return self._frame
 
     def _clear(self) -> None:
         """Clear from current position to end of line."""
         self._terminal.erase_to_end()
 
-    def _calculate_max_width(self) -> int:
+    def _get_max_width(self) -> int:
         """Calculate maximum available width from current position to end of line."""
         _, col = self._terminal.get_cursor_position()
         screen_width = self._terminal.get_screen_width()
