@@ -119,19 +119,19 @@ class Snurr:
         self._clear()
         self._status = message
         if not self._stop_event.is_set():  # Only update if spinner is running
-            self._update(self.frames[0])  # Use first frame as placeholder
+            self._update(self.frames[0], self._status)  # Use first frame as placeholder
 
     # Private helper methods - Spinner animation
     def _spin(self) -> None:
         """Main spinner animation loop."""
         frames = itertools.cycle(self.frames)
         while not self._stop_event.is_set():
-            self._update(next(frames))
+            self._update(next(frames), self._status)
             time.sleep(self.delay)
 
-    def _update(self, new_frame: str) -> None:
+    def _update(self, new_frame: str, status: str) -> None:
         """Update the buffer with new frame and status."""
-        new_buffer = self._truncate(self._status, new_frame)
+        new_buffer = self._truncate(status, new_frame)
         self._buffer = new_buffer
         self._render()
 
