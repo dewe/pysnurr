@@ -165,10 +165,10 @@ class Snurr:
 
     def _update_display(self, state: SpinnerState) -> None:
         """Update the display with current state."""
-        buffer = self._truncate(state)
-        width = self._terminal.columns_width(buffer)
+        content = self._truncate(state)
+        width = self._terminal.columns_width(content)
+        buffer = content + self._terminal.get_cursor_left_sequence(width)
         self._terminal.write(buffer)
-        self._terminal.move_cursor_left(width)
 
     def _truncate(self, state: SpinnerState) -> str:
         """Truncate message if it would exceed available width."""
