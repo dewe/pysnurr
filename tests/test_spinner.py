@@ -326,12 +326,11 @@ class TestErrorHandling:
             try:
                 print("Text")
                 with spinner:
-                    time.sleep(0.002)  # Let spinner run briefly
                     TestUtils.simulate_ctrl_c()
             except KeyboardInterrupt:
                 pass  # Expected
         # Verify cleanup state
-        assert not spinner._busy
+        assert spinner._stop_event.is_set()
         assert spinner._buffer == ""
 
         # Check thread is cleaned up

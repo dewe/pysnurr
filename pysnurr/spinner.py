@@ -69,7 +69,7 @@ class Snurr:
         self.frames: list[str] = split_graphemes(frames)
         self.delay: float = delay
         self._buffer: str = ""
-        self._busy: bool = False
+        self._stop_event: threading.Event = threading.Event()
         self._max_available_width: int = 80  # default width
         self._spinner_thread: threading.Thread | None = None
         self._status: str = status
@@ -94,7 +94,7 @@ class Snurr:
     def start(self) -> None:
         """Start the spinner animation in a non-blocking way."""
         self._max_available_width = self._calculate_max_width()
-        self._busy = True
+        self._stop_event.clear()
         self._terminal.hide_cursor()
         self._spinner_thread = threading.Thread(target=self._spin)
         self._spinner_thread.daemon = True
@@ -102,7 +102,7 @@ class Snurr:
 
     def stop(self) -> None:
         """Stop the spinner animation and restore cursor."""
-        self._busy = False
+        self._stop_event.set()
         if self._spinner_thread:
             self._spinner_thread.join()
             self._clear()
@@ -118,14 +118,14 @@ class Snurr:
         """Set a new status message."""
         self._clear()
         self._status = message
-        if self._busy:  # Only update if spinner is running
+        if not self._stop_event.is_set():  # Only update if spinner is running
             self._update(self.frames[0])  # Use first frame as placeholder
 
     # Private helper methods - Spinner animation
     def _spin(self) -> None:
         """Main spinner animation loop."""
         frames = itertools.cycle(self.frames)
-        while self._busy:
+        while not self._stop_event.is_set():
             self._update(next(frames))
             time.sleep(self.delay)
 
