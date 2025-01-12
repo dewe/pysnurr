@@ -331,7 +331,6 @@ class TestErrorHandling:
                 pass  # Expected
         # Verify cleanup state
         assert spinner._stop_event.is_set()
-        assert spinner._buffer == ""
 
         # Check thread is cleaned up
         has_thread = spinner._spinner_thread is not None
